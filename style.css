@@ -1,0 +1,19 @@
+.outer {
+    display: table;
+    position: absolute;
+    height: 95%;
+    width: 95%;
+}
+
+.middle {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.inner {
+    margin-left: auto;
+    margin-right: auto; 
+    text-align: center;
+    width: 50%;
+    font-size: 10em;
+}
