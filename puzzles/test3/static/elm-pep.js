@@ -63,7 +63,7 @@ function addTouchToPointerListener(target, touchType, pointerType) {
       mouseEvent.screenY = touch.screenY;
       mouseEvent.pageX = touch.pageX;
       mouseEvent.pageY = touch.pageY;
-      const rect = touchEvent.currentTarget.getBoundingClientRect();
+      const rect = touch.target.getBoundingClientRect();
       mouseEvent.offsetX = touch.clientX - rect.left;
       mouseEvent.offsetY = touch.clientY - rect.top;
 
