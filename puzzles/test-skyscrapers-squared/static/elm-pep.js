@@ -17,12 +17,14 @@ if (!("PointerEvent" in window)) {
     addMouseToPointerListener(document, "mousemove", "pointermove");
     addMouseToPointerListener(document, "mouseup", "pointerup");
 
-    definePointerCapture();
+    defineMousePointerCapture();
   }
 
   addTouchToPointerListener(document, "touchstart", "pointerdown");
   addTouchToPointerListener(document, "touchmove", "pointermove");
   addTouchToPointerListener(document, "touchend", "pointerup");
+
+  defineNoopPointerCapture();
 }
 
 function addMouseToPointerListener(target, mouseType, pointerType) {
@@ -84,7 +86,7 @@ function addTouchToPointerListener(target, touchType, pointerType) {
   });
 }
 
-function definePointerCapture() {
+function defineMousePointerCapture() {
   if (window.Element && !Element.prototype.setPointerCapture) {
     Object.defineProperties(Element.prototype, {
       'setPointerCapture': {
@@ -96,6 +98,23 @@ function definePointerCapture() {
         value: function(pointerId) {
           if (mouseCaptureTarget === this) {
             mouseCaptureTarget = null;
+          }
+        }
+      }
+    });
+  }
+}
+
+function defineNoopPointerCapture() {
+  if (window.Element && !Element.prototype.setPointerCapture) {
+    Object.defineProperties(Element.prototype, {
+      'setPointerCapture': {
+        value: function(pointerId) {
+        }
+      },
+      'releasePointerCapture': {
+        value: function(pointerId) {
+          if (mouseCaptureTarget === this) {
           }
         }
       }
