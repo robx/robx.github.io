@@ -69,7 +69,7 @@ function addTouchToPointerListener(target, touchType, pointerType) {
       mouseEvent.offsetX = offsetX;
       mouseEvent.offsetY = offsetY;
 
-      let pointerEvent = new MouseEvent(pointerType, mouseEvent);
+      let pointerEvent = new CustomEvent(pointerType, mouseEvent);
       pointerEvent.pointerId = 1 + touch.identifier;
       pointerEvent.offsetX = offsetX;
       pointerEvent.offsetY = offsetY;
