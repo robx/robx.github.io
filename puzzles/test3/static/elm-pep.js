@@ -63,12 +63,12 @@ function addTouchToPointerListener(target, touchType, pointerType) {
       mouseEvent.screenY = touch.screenY;
       mouseEvent.pageX = touch.pageX;
       mouseEvent.pageY = touch.pageY;
-      const rect = touch.target.getBoundingClientRect();
-      mouseEvent.offsetX = touch.clientX - rect.left;
-      mouseEvent.offsetY = touch.clientY - rect.top;
 
       let pointerEvent = new MouseEvent(pointerType, mouseEvent);
       pointerEvent.pointerId = 1 + touch.identifier;
+      const rect = touch.target.getBoundingClientRect();
+      pointerEvent.offsetX = touch.clientX - rect.left;
+      pointerEvent.offsetY = touch.clientY - rect.top;
 
       // First touch is the primary pointer event.
       if (touchType === "touchstart" && primaryTouchId === null) {
