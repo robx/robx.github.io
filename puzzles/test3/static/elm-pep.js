@@ -47,7 +47,7 @@ function addMouseToPointerListener(target, mouseType, pointerType) {
 
 function addTouchToPointerListener(target, touchType, pointerType) {
   target.addEventListener(touchType, touchEvent => {
-    let mouseEvent = new CustomEvent("", { bubbles: true, cancelable: true });
+    let mouseEvent = new CustomEvent(pointerType, { bubbles: true, cancelable: true });
     mouseEvent.ctrlKey = touchEvent.ctrlKey;
     mouseEvent.shiftKey = touchEvent.shiftKey;
     mouseEvent.altKey = touchEvent.altKey;
@@ -69,24 +69,23 @@ function addTouchToPointerListener(target, touchType, pointerType) {
       mouseEvent.offsetX = offsetX;
       mouseEvent.offsetY = offsetY;
 
-      let pointerEvent = new CustomEvent(pointerType, mouseEvent);
-      pointerEvent.pointerId = 1 + touch.identifier;
-      pointerEvent.offsetX = offsetX;
-      pointerEvent.offsetY = offsetY;
+      mouseEvent.pointerId = 1 + touch.identifier;
+      mouseEvent.offsetX = offsetX;
+      mouseEvent.offsetY = offsetY;
 
       // First touch is the primary pointer event.
       if (touchType === "touchstart" && primaryTouchId === null) {
         primaryTouchId = touch.identifier;
       }
-      pointerEvent.isPrimary = touch.identifier === primaryTouchId;
+      mouseEvent.isPrimary = touch.identifier === primaryTouchId;
 
       // If first touch ends, reset primary touch id.
-      if (touchType === "touchend" && pointerEvent.isPrimary) {
+      if (touchType === "touchend" && mouseEvent.isPrimary) {
         primaryTouchId = null;
       }
 
-      touchEvent.target.dispatchEvent(pointerEvent);
-      if (pointerEvent.defaultPrevented) {
+      touchEvent.target.dispatchEvent(mouseEvent);
+      if (mouseEvent.defaultPrevented) {
         touchEvent.preventDefault();
       }
     }
