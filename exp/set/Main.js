@@ -11809,6 +11809,138 @@ var _user$project$Game$dealMore = function (g) {
 		g);
 };
 
+var _user$project$SvgSet$more = function () {
+	var toPoints = function (_p0) {
+		return A2(
+			_elm_lang$core$String$join,
+			' ',
+			A2(
+				_elm_lang$core$List$map,
+				function (_p1) {
+					var _p2 = _p1;
+					return A2(
+						_elm_lang$core$Basics_ops['++'],
+						_elm_lang$core$Basics$toString(_p2._0),
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							',',
+							_elm_lang$core$Basics$toString(_p2._1)));
+				},
+				_p0));
+	};
+	var cross = F2(
+		function (a, b) {
+			return {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 0 - a, _1: b},
+				_1: {
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: 0 - b, _1: b},
+					_1: {
+						ctor: '::',
+						_0: {ctor: '_Tuple2', _0: 0 - b, _1: a},
+						_1: {
+							ctor: '::',
+							_0: {ctor: '_Tuple2', _0: b, _1: a},
+							_1: {
+								ctor: '::',
+								_0: {ctor: '_Tuple2', _0: b, _1: b},
+								_1: {
+									ctor: '::',
+									_0: {ctor: '_Tuple2', _0: a, _1: b},
+									_1: {
+										ctor: '::',
+										_0: {ctor: '_Tuple2', _0: a, _1: 0 - b},
+										_1: {
+											ctor: '::',
+											_0: {ctor: '_Tuple2', _0: b, _1: 0 - b},
+											_1: {
+												ctor: '::',
+												_0: {ctor: '_Tuple2', _0: b, _1: 0 - a},
+												_1: {
+													ctor: '::',
+													_0: {ctor: '_Tuple2', _0: 0 - b, _1: 0 - a},
+													_1: {
+														ctor: '::',
+														_0: {ctor: '_Tuple2', _0: 0 - b, _1: 0 - b},
+														_1: {
+															ctor: '::',
+															_0: {ctor: '_Tuple2', _0: 0 - a, _1: 0 - b},
+															_1: {ctor: '[]'}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			};
+		});
+	return A2(
+		_elm_lang$svg$Svg$g,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$svg$Svg$rect,
+				{
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$x('-25'),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$y('-40'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$width('50'),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$height('80'),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$svg$Svg_Attributes$rx('6'),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$svg$Svg_Attributes$ry('6'),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$svg$Svg_Attributes$stroke('none'),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$svg$Svg_Attributes$fill('lightgray'),
+												_1: {ctor: '[]'}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				{ctor: '[]'}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$svg$Svg$polygon,
+					{
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$points(
+							toPoints(
+								A2(cross, 14, 2))),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$fill('gray'),
+							_1: {ctor: '[]'}
+						}
+					},
+					{ctor: '[]'}),
+				_1: {ctor: '[]'}
+			}
+		});
+}();
 var _user$project$SvgSet$card = function (selected) {
 	return A2(
 		_elm_lang$svg$Svg$rect,
@@ -12153,8 +12285,8 @@ var _user$project$SvgSet$svgDefs = A2(
 	{ctor: '[]'},
 	{ctor: '::', _0: _user$project$SvgSet$dropShadow, _1: _user$project$SvgSet$clipPaths});
 var _user$project$SvgSet$color = function (c) {
-	var _p0 = c;
-	switch (_p0.ctor) {
+	var _p3 = c;
+	switch (_p3.ctor) {
 		case 'Red':
 			return 'rgb(229,46,37)';
 		case 'Green':
@@ -12175,8 +12307,8 @@ var _user$project$SvgSet$draw = F2(
 					')'));
 		};
 		var locs = function () {
-			var _p1 = c.count;
-			switch (_p1.ctor) {
+			var _p4 = c.count;
+			switch (_p4.ctor) {
 				case 'One':
 					return {
 						ctor: '::',
@@ -12210,8 +12342,8 @@ var _user$project$SvgSet$draw = F2(
 			}
 		}();
 		var elt = function () {
-			var _p2 = c.shape;
-			switch (_p2.ctor) {
+			var _p5 = c.shape;
+			switch (_p5.ctor) {
 				case 'Diamond':
 					return _user$project$SvgSet$diamond;
 				case 'Oval':
@@ -12222,8 +12354,8 @@ var _user$project$SvgSet$draw = F2(
 		}();
 		var col = _user$project$SvgSet$color(c.color);
 		var f = function () {
-			var _p3 = c.fill;
-			switch (_p3.ctor) {
+			var _p6 = c.fill;
+			switch (_p6.ctor) {
 				case 'Full':
 					return col;
 				case 'Shaded':
@@ -12233,8 +12365,8 @@ var _user$project$SvgSet$draw = F2(
 			}
 		}();
 		var shade = function () {
-			var _p4 = c.fill;
-			if (_p4.ctor === 'Shaded') {
+			var _p7 = c.fill;
+			if (_p7.ctor === 'Shaded') {
 				return {
 					ctor: '::',
 					_0: A2(
@@ -12243,8 +12375,8 @@ var _user$project$SvgSet$draw = F2(
 							ctor: '::',
 							_0: _elm_lang$svg$Svg_Attributes$clipPath(
 								function () {
-									var _p5 = c.shape;
-									switch (_p5.ctor) {
+									var _p8 = c.shape;
+									switch (_p8.ctor) {
 										case 'Diamond':
 											return 'url(#diamond)';
 										case 'Oval':
@@ -12427,9 +12559,24 @@ var _user$project$Main$Choose = function (a) {
 	return {ctor: 'Choose', _0: a};
 };
 var _user$project$Main$view = function (model) {
+	var cols = _user$project$Game$columns(model.game);
+	var viewBox = function () {
+		var height = (80 + 10) * 3;
+		var width = (50 + 10) * (cols + 1);
+		return A2(
+			_elm_lang$core$Basics_ops['++'],
+			'0 0 ',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(width),
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					' ',
+					_elm_lang$core$Basics$toString(height))));
+	}();
 	var trans = function (_p4) {
 		var _p5 = _p4;
-		var y = 50 + (90 * _p5._1);
+		var y = 45 + (90 * _p5._1);
 		var x = 30 + (60 * _p5._0);
 		return A2(
 			_elm_lang$core$Basics_ops['++'],
@@ -12445,6 +12592,24 @@ var _user$project$Main$view = function (model) {
 						_elm_lang$core$Basics$toString(y),
 						')'))));
 	};
+	var more = A2(
+		_elm_lang$svg$Svg$g,
+		{
+			ctor: '::',
+			_0: _elm_lang$svg$Svg_Attributes$transform(
+				trans(
+					{ctor: '_Tuple2', _0: cols, _1: 0})),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Events$onClick(_user$project$Main$DealMore),
+				_1: {ctor: '[]'}
+			}
+		},
+		{
+			ctor: '::',
+			_0: _user$project$SvgSet$more,
+			_1: {ctor: '[]'}
+		});
 	var d = function (_p6) {
 		var _p7 = _p6;
 		var _p8 = _p7._0;
@@ -12475,43 +12640,16 @@ var _user$project$Main$view = function (model) {
 		d,
 		_elm_lang$core$Dict$toList(model.game.table));
 	return A2(
-		_elm_lang$html$Html$div,
-		{ctor: '[]'},
+		_elm_lang$svg$Svg$svg,
 		{
 			ctor: '::',
-			_0: A2(
-				_elm_lang$html$Html$button,
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$DealMore),
-					_1: {
-						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$disabled(
-							model.dealing || _user$project$Game$deckEmpty(model.game)),
-						_1: {ctor: '[]'}
-					}
-				},
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html$text('Deal more'),
-					_1: {ctor: '[]'}
-				}),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_elm_lang$svg$Svg$svg,
-					{
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$viewBox('0 0 300 300'),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$width('500px'),
-							_1: {ctor: '[]'}
-						}
-					},
-					{ctor: '::', _0: _user$project$SvgSet$svgDefs, _1: gs}),
-				_1: {ctor: '[]'}
-			}
+			_0: _elm_lang$svg$Svg_Attributes$viewBox(viewBox),
+			_1: {ctor: '[]'}
+		},
+		{
+			ctor: '::',
+			_0: _user$project$SvgSet$svgDefs,
+			_1: {ctor: '::', _0: more, _1: gs}
 		});
 };
 var _user$project$Main$NewGame = function (a) {
