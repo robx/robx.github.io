@@ -1,0 +1,11 @@
+html, body, div, svg {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+}
+
+@media (min-width: 800px) {
+    svg {
+        width: 800px;
+    }
+}
