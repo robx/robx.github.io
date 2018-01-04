@@ -12263,7 +12263,7 @@ var _user$project$SvgSet$rectangle = A2(
 	},
 	{ctor: '[]'});
 var _user$project$SvgSet$mySet = {
-	colors: {ctor: '_Tuple3', _0: 'red', _1: 'yellow', _2: 'blue'},
+	colors: {ctor: '_Tuple3', _0: 'red', _1: 'rgb(248,190,100)', _2: 'blue'},
 	shapes: {ctor: '_Tuple3', _0: _user$project$SvgSet$rectangle, _1: _user$project$SvgSet$ellipse, _2: _user$project$SvgSet$lens}
 };
 var _user$project$SvgSet$standardSet = {
