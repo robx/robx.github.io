@@ -11925,7 +11925,7 @@ var _user$project$SvgSet$card = F2(
 												_0: _elm_lang$svg$Svg_Attributes$fill(st.background),
 												_1: {
 													ctor: '::',
-													_0: _elm_lang$svg$Svg_Attributes$style('filter:url(#dropshadow)'),
+													_0: _elm_lang$svg$Svg_Attributes$style('filter: url(#dropshadow);'),
 													_1: {ctor: '[]'}
 												}
 											}
@@ -12784,7 +12784,11 @@ var _user$project$Main$view = function (model) {
 		var handler = (model.dealing || _user$project$Game$deckEmpty(model.game)) ? {ctor: '[]'} : {
 			ctor: '::',
 			_0: _elm_lang$svg$Svg_Events$onClick(_user$project$Main$DealMore),
-			_1: {ctor: '[]'}
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$style('cursor: pointer;'),
+				_1: {ctor: '[]'}
+			}
 		};
 		return A2(
 			_elm_lang$svg$Svg$g,
@@ -12807,7 +12811,11 @@ var _user$project$Main$view = function (model) {
 			var handler = model.dealing ? {ctor: '[]'} : {
 				ctor: '::',
 				_0: _elm_lang$svg$Svg_Events$onClick(_user$project$Main$Ask),
-				_1: {ctor: '[]'}
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$style('cursor: pointer;'),
+					_1: {ctor: '[]'}
+				}
 			};
 			return A2(
 				_elm_lang$svg$Svg$g,
@@ -12816,11 +12824,7 @@ var _user$project$Main$view = function (model) {
 					_0: _elm_lang$svg$Svg_Attributes$transform(
 						trans(
 							{ctor: '_Tuple2', _0: cols, _1: 1})),
-					_1: {
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Events$onClick(_user$project$Main$Ask),
-						_1: {ctor: '[]'}
-					}
+					_1: handler
 				},
 				{
 					ctor: '::',
@@ -12858,7 +12862,11 @@ var _user$project$Main$view = function (model) {
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Events$onClick(
 						_user$project$Main$Choose(_p10)),
-					_1: {ctor: '[]'}
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$style('cursor: pointer;'),
+						_1: {ctor: '[]'}
+					}
 				}
 			},
 			{
