@@ -11329,70 +11329,22 @@ var _user$project$Card$set = function (cards) {
 				_elm_community$list_extra$List_Extra$unique(
 					A2(_elm_lang$core$List$map, prop, cards))));
 	};
-	var fillI = function (c) {
-		var _p0 = c.fill;
-		switch (_p0.ctor) {
-			case 'Full':
-				return 0;
-			case 'Shaded':
-				return 1;
-			default:
-				return 2;
-		}
-	};
-	var shapeI = function (c) {
-		var _p1 = c.shape;
-		switch (_p1.ctor) {
-			case 'Diamond':
-				return 0;
-			case 'Oval':
-				return 1;
-			default:
-				return 2;
-		}
-	};
-	var countI = function (c) {
-		var _p2 = c.count;
-		switch (_p2.ctor) {
-			case 'One':
-				return 0;
-			case 'Two':
-				return 1;
-			default:
-				return 2;
-		}
-	};
-	var colorI = function (c) {
-		var _p3 = c.color;
-		switch (_p3.ctor) {
-			case 'Red':
-				return 0;
-			case 'Green':
-				return 1;
-			default:
-				return 2;
-		}
-	};
 	return _elm_lang$core$Native_Utils.eq(
 		_elm_lang$core$List$length(cards),
-		3) && (test(colorI) && (test(countI) && (test(shapeI) && test(fillI))));
+		3) && (test(
+		function (_) {
+			return _.color;
+		}) && (test(
+		function (_) {
+			return _.count;
+		}) && (test(
+		function (_) {
+			return _.shape;
+		}) && test(
+		function (_) {
+			return _.fill;
+		}))));
 };
-var _user$project$Card$Card = F4(
-	function (a, b, c, d) {
-		return {color: a, count: b, shape: c, fill: d};
-	});
-var _user$project$Card$Purple = {ctor: 'Purple'};
-var _user$project$Card$Green = {ctor: 'Green'};
-var _user$project$Card$Red = {ctor: 'Red'};
-var _user$project$Card$Three = {ctor: 'Three'};
-var _user$project$Card$Two = {ctor: 'Two'};
-var _user$project$Card$One = {ctor: 'One'};
-var _user$project$Card$Squiggle = {ctor: 'Squiggle'};
-var _user$project$Card$Oval = {ctor: 'Oval'};
-var _user$project$Card$Diamond = {ctor: 'Diamond'};
-var _user$project$Card$Empty = {ctor: 'Empty'};
-var _user$project$Card$Shaded = {ctor: 'Shaded'};
-var _user$project$Card$Full = {ctor: 'Full'};
 var _user$project$Card$fromInt = function (x) {
 	var b1 = (x / 3) | 0;
 	var a2 = A2(_elm_lang$core$Basics_ops['%'], b1, 3);
@@ -11401,79 +11353,48 @@ var _user$project$Card$fromInt = function (x) {
 	var b3 = (b2 / 3) | 0;
 	var a4 = A2(_elm_lang$core$Basics_ops['%'], b3, 3);
 	var a1 = A2(_elm_lang$core$Basics_ops['%'], x, 3);
-	return {
-		color: function () {
-			var _p4 = a1;
-			switch (_p4) {
-				case 0:
-					return _user$project$Card$Red;
-				case 1:
-					return _user$project$Card$Green;
-				default:
-					return _user$project$Card$Purple;
-			}
-		}(),
-		count: function () {
-			var _p5 = a2;
-			switch (_p5) {
-				case 0:
-					return _user$project$Card$One;
-				case 1:
-					return _user$project$Card$Two;
-				default:
-					return _user$project$Card$Three;
-			}
-		}(),
-		shape: function () {
-			var _p6 = a3;
-			switch (_p6) {
-				case 0:
-					return _user$project$Card$Diamond;
-				case 1:
-					return _user$project$Card$Oval;
-				default:
-					return _user$project$Card$Squiggle;
-			}
-		}(),
-		fill: function () {
-			var _p7 = a4;
-			switch (_p7) {
-				case 0:
-					return _user$project$Card$Full;
-				case 1:
-					return _user$project$Card$Shaded;
-				default:
-					return _user$project$Card$Empty;
-			}
-		}()
-	};
+	return {color: a1, count: a2, shape: a3, fill: a4};
 };
+var _user$project$Card$Card = F4(
+	function (a, b, c, d) {
+		return {color: a, count: b, shape: c, fill: d};
+	});
 
+var _user$project$D$ptos = function (_p0) {
+	var _p1 = _p0;
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		_elm_lang$core$Basics$toString(_p1._0),
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			',',
+			_elm_lang$core$Basics$toString(_p1._1)));
+};
 var _user$project$D$dd = F2(
 	function (c, ps) {
-		var ptos = function (_p0) {
-			var _p1 = _p0;
-			return A2(
-				_elm_lang$core$Basics_ops['++'],
-				_elm_lang$core$Basics$toString(_p1._0),
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					',',
-					_elm_lang$core$Basics$toString(_p1._1)));
-		};
 		return A2(
 			_elm_lang$core$String$join,
 			' ',
 			{
 				ctor: '::',
 				_0: c,
-				_1: A2(_elm_lang$core$List$map, ptos, ps)
+				_1: A2(_elm_lang$core$List$map, _user$project$D$ptos, ps)
 			});
 	});
 var _user$project$D$dl = function (p) {
 	return A2(
 		_user$project$D$dd,
 		'l',
+		{
+			ctor: '::',
+			_0: p,
+			_1: {ctor: '[]'}
+		});
+};
+var _user$project$D$dL = function (p) {
+	return A2(
+		_user$project$D$dd,
+		'L',
 		{
 			ctor: '::',
 			_0: p,
@@ -11538,6 +11459,33 @@ var _user$project$D$dZ = A2(
 	_user$project$D$dd,
 	'Z',
 	{ctor: '[]'});
+var _user$project$D$dA = F4(
+	function (p, x, q, r) {
+		return A2(
+			_elm_lang$core$String$join,
+			' ',
+			{
+				ctor: '::',
+				_0: 'A',
+				_1: {
+					ctor: '::',
+					_0: _user$project$D$ptos(p),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$core$Basics$toString(x),
+						_1: {
+							ctor: '::',
+							_0: _user$project$D$ptos(q),
+							_1: {
+								ctor: '::',
+								_0: _user$project$D$ptos(r),
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				}
+			});
+	});
 
 var _user$project$Game$countSets = function (g) {
 	var pairs = function (xs) {
@@ -11765,6 +11713,11 @@ var _user$project$Game$compactMoves = function (g) {
 			_elm_lang$core$List$reverse(
 				_elm_lang$core$Dict$keys(g.table))));
 };
+var _user$project$Game$over = function (g) {
+	return _elm_lang$core$List$isEmpty(g.deck) && _elm_lang$core$Native_Utils.eq(
+		_user$project$Game$countSets(g),
+		0);
+};
 var _user$project$Game$none = {
 	deck: {ctor: '[]'},
 	table: _elm_lang$core$Dict$empty
@@ -11937,42 +11890,44 @@ var _user$project$SvgSet$letterCard = function (c) {
 		});
 };
 var _user$project$SvgSet$more = _user$project$SvgSet$letterCard('+');
-var _user$project$SvgSet$card = function (selected) {
-	return A2(
-		_elm_lang$svg$Svg$rect,
-		{
-			ctor: '::',
-			_0: _elm_lang$svg$Svg_Attributes$x('-25'),
-			_1: {
+var _user$project$SvgSet$card = F2(
+	function (st, selected) {
+		return A2(
+			_elm_lang$svg$Svg$rect,
+			{
 				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$y('-40'),
+				_0: _elm_lang$svg$Svg_Attributes$x('-25'),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$width('50'),
+					_0: _elm_lang$svg$Svg_Attributes$y('-40'),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$height('80'),
+						_0: _elm_lang$svg$Svg_Attributes$width('50'),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$rx('6'),
+							_0: _elm_lang$svg$Svg_Attributes$height('80'),
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$ry('6'),
+								_0: _elm_lang$svg$Svg_Attributes$rx('6'),
 								_1: {
 									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$stroke(
-										selected ? 'orange' : 'slategray'),
+									_0: _elm_lang$svg$Svg_Attributes$ry('6'),
 									_1: {
 										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$strokeWidth(
-											selected ? '1' : '0.2'),
+										_0: _elm_lang$svg$Svg_Attributes$stroke(
+											selected ? st.select : st.foreground),
 										_1: {
 											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$fill('white'),
+											_0: _elm_lang$svg$Svg_Attributes$strokeWidth(
+												selected ? '1' : '0.2'),
 											_1: {
 												ctor: '::',
-												_0: _elm_lang$svg$Svg_Attributes$style('filter:url(#dropshadow)'),
-												_1: {ctor: '[]'}
+												_0: _elm_lang$svg$Svg_Attributes$fill(st.background),
+												_1: {
+													ctor: '::',
+													_0: _elm_lang$svg$Svg_Attributes$style('filter:url(#dropshadow)'),
+													_1: {ctor: '[]'}
+												}
 											}
 										}
 									}
@@ -11981,10 +11936,9 @@ var _user$project$SvgSet$card = function (selected) {
 						}
 					}
 				}
-			}
-		},
-		{ctor: '[]'});
-};
+			},
+			{ctor: '[]'});
+	});
 var _user$project$SvgSet$dropShadow = A2(
 	_elm_lang$svg$Svg$filter,
 	{
@@ -12230,69 +12184,121 @@ var _user$project$SvgSet$diamond = A2(
 		_1: {ctor: '[]'}
 	},
 	{ctor: '[]'});
-var _user$project$SvgSet$clipPaths = {
-	ctor: '::',
-	_0: A2(
-		_elm_lang$svg$Svg$clipPath,
-		{
-			ctor: '::',
-			_0: _elm_lang$svg$Svg_Attributes$id('diamond'),
-			_1: {ctor: '[]'}
-		},
-		{
-			ctor: '::',
-			_0: _user$project$SvgSet$diamond,
-			_1: {ctor: '[]'}
-		}),
-	_1: {
+var _user$project$SvgSet$lens = A2(
+	_elm_lang$svg$Svg$path,
+	{
 		ctor: '::',
-		_0: A2(
-			_elm_lang$svg$Svg$clipPath,
-			{
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$id('oval'),
-				_1: {ctor: '[]'}
-			},
-			{
-				ctor: '::',
-				_0: _user$project$SvgSet$oval,
-				_1: {ctor: '[]'}
-			}),
+		_0: _elm_lang$svg$Svg_Attributes$d(
+			A2(
+				_elm_lang$core$String$join,
+				' ',
+				{
+					ctor: '::',
+					_0: _user$project$D$dM(
+						{ctor: '_Tuple2', _0: -18, _1: 6}),
+					_1: {
+						ctor: '::',
+						_0: A4(
+							_user$project$D$dA,
+							{ctor: '_Tuple2', _0: 40, _1: 40},
+							0,
+							{ctor: '_Tuple2', _0: 0, _1: 1},
+							{ctor: '_Tuple2', _0: 18, _1: 6}),
+						_1: {
+							ctor: '::',
+							_0: _user$project$D$dL(
+								{ctor: '_Tuple2', _0: 18, _1: -6}),
+							_1: {
+								ctor: '::',
+								_0: A4(
+									_user$project$D$dA,
+									{ctor: '_Tuple2', _0: 40, _1: 40},
+									0,
+									{ctor: '_Tuple2', _0: 0, _1: 1},
+									{ctor: '_Tuple2', _0: -18, _1: -6}),
+								_1: {
+									ctor: '::',
+									_0: _user$project$D$dZ,
+									_1: {ctor: '[]'}
+								}
+							}
+						}
+					}
+				})),
+		_1: {ctor: '[]'}
+	},
+	{ctor: '[]'});
+var _user$project$SvgSet$ellipse = A2(
+	_elm_lang$svg$Svg$ellipse,
+	{
+		ctor: '::',
+		_0: _elm_lang$svg$Svg_Attributes$cx('0'),
 		_1: {
 			ctor: '::',
-			_0: A2(
-				_elm_lang$svg$Svg$clipPath,
-				{
+			_0: _elm_lang$svg$Svg_Attributes$cy('0'),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$rx('18'),
+				_1: {
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$id('squiggle'),
+					_0: _elm_lang$svg$Svg_Attributes$ry('6'),
 					_1: {ctor: '[]'}
-				},
-				{
-					ctor: '::',
-					_0: _user$project$SvgSet$squiggle,
-					_1: {ctor: '[]'}
-				}),
-			_1: {ctor: '[]'}
+				}
+			}
 		}
-	}
+	},
+	{ctor: '[]'});
+var _user$project$SvgSet$rectangle = A2(
+	_elm_lang$svg$Svg$rect,
+	{
+		ctor: '::',
+		_0: _elm_lang$svg$Svg_Attributes$x('-18'),
+		_1: {
+			ctor: '::',
+			_0: _elm_lang$svg$Svg_Attributes$y('-6'),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$width('36'),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$height('12'),
+					_1: {ctor: '[]'}
+				}
+			}
+		}
+	},
+	{ctor: '[]'});
+var _user$project$SvgSet$mySet = {
+	colors: {ctor: '_Tuple3', _0: 'rgb(5,135,137)', _1: 'rgb(213,75,26)', _2: 'rgb(227,167,45)'},
+	foreground: 'rgb(80,61,46)',
+	background: 'rgb(246,242,231)',
+	table: 'rgb(240,236,201)',
+	select: 'orange',
+	shapes: {ctor: '_Tuple3', _0: _user$project$SvgSet$rectangle, _1: _user$project$SvgSet$ellipse, _2: _user$project$SvgSet$lens}
 };
-var _user$project$SvgSet$svgDefs = A2(
-	_elm_lang$svg$Svg$defs,
-	{ctor: '[]'},
-	{ctor: '::', _0: _user$project$SvgSet$dropShadow, _1: _user$project$SvgSet$clipPaths});
-var _user$project$SvgSet$color = function (c) {
-	var _p0 = c;
-	switch (_p0.ctor) {
-		case 'Red':
-			return 'rgb(229,46,37)';
-		case 'Green':
-			return 'rgb(72,128,52)';
-		default:
-			return 'rgb(116,44,177)';
-	}
+var _user$project$SvgSet$standardSet = {
+	colors: {ctor: '_Tuple3', _0: 'rgb(229,46,37)', _1: 'rgb(72,128,52)', _2: 'rgb(116,44,177)'},
+	foreground: 'black',
+	background: 'white',
+	table: 'white',
+	select: 'orange',
+	shapes: {ctor: '_Tuple3', _0: _user$project$SvgSet$diamond, _1: _user$project$SvgSet$oval, _2: _user$project$SvgSet$squiggle}
 };
-var _user$project$SvgSet$draw = F2(
-	function (selected, c) {
+var _user$project$SvgSet$lookup = F2(
+	function (_p0, p) {
+		var _p1 = _p0;
+		var _p2 = p;
+		switch (_p2) {
+			case 0:
+				return _p1._0;
+			case 1:
+				return _p1._1;
+			default:
+				return _p1._2;
+		}
+	});
+var _user$project$SvgSet$draw = F3(
+	function (st, selected, c) {
 		var trans = function (y) {
 			return A2(
 				_elm_lang$core$Basics_ops['++'],
@@ -12303,15 +12309,15 @@ var _user$project$SvgSet$draw = F2(
 					')'));
 		};
 		var locs = function () {
-			var _p1 = c.count;
-			switch (_p1.ctor) {
-				case 'One':
+			var _p3 = c.count;
+			switch (_p3) {
+				case 0:
 					return {
 						ctor: '::',
 						_0: 0,
 						_1: {ctor: '[]'}
 					};
-				case 'Two':
+				case 1:
 					return {
 						ctor: '::',
 						_0: 10,
@@ -12337,32 +12343,22 @@ var _user$project$SvgSet$draw = F2(
 					};
 			}
 		}();
-		var elt = function () {
-			var _p2 = c.shape;
-			switch (_p2.ctor) {
-				case 'Diamond':
-					return _user$project$SvgSet$diamond;
-				case 'Oval':
-					return _user$project$SvgSet$oval;
-				default:
-					return _user$project$SvgSet$squiggle;
-			}
-		}();
-		var col = _user$project$SvgSet$color(c.color);
+		var elt = A2(_user$project$SvgSet$lookup, st.shapes, c.shape);
+		var col = A2(_user$project$SvgSet$lookup, st.colors, c.color);
 		var f = function () {
-			var _p3 = c.fill;
-			switch (_p3.ctor) {
-				case 'Full':
+			var _p4 = c.fill;
+			switch (_p4) {
+				case 0:
 					return col;
-				case 'Shaded':
+				case 1:
 					return 'none';
 				default:
 					return 'none';
 			}
 		}();
 		var shade = function () {
-			var _p4 = c.fill;
-			if (_p4.ctor === 'Shaded') {
+			var _p5 = c.fill;
+			if (_p5 === 1) {
 				return {
 					ctor: '::',
 					_0: A2(
@@ -12371,14 +12367,14 @@ var _user$project$SvgSet$draw = F2(
 							ctor: '::',
 							_0: _elm_lang$svg$Svg_Attributes$clipPath(
 								function () {
-									var _p5 = c.shape;
-									switch (_p5.ctor) {
-										case 'Diamond':
-											return 'url(#diamond)';
-										case 'Oval':
-											return 'url(#oval)';
+									var _p6 = c.shape;
+									switch (_p6) {
+										case 0:
+											return 'url(#clip0)';
+										case 1:
+											return 'url(#clip1)';
 										default:
-											return 'url(#squiggle)';
+											return 'url(#clip2)';
 									}
 								}()),
 							_1: {
@@ -12442,53 +12438,217 @@ var _user$project$SvgSet$draw = F2(
 				_elm_lang$core$Basics_ops['++'],
 				{
 					ctor: '::',
-					_0: _user$project$SvgSet$card(selected),
+					_0: A2(_user$project$SvgSet$card, st, selected),
 					_1: {ctor: '[]'}
 				},
 				A2(_elm_lang$core$List$map, sym, locs)));
 	});
-
-var _user$project$Main$Model = F4(
-	function (a, b, c, d) {
-		return {game: a, selected: b, dealing: c, answer: d};
+var _user$project$SvgSet$clipPaths = function (st) {
+	var cp = function (d) {
+		return A2(
+			_elm_lang$svg$Svg$clipPath,
+			{
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$id(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'clip',
+						_elm_lang$core$Basics$toString(d))),
+				_1: {ctor: '[]'}
+			},
+			{
+				ctor: '::',
+				_0: A2(_user$project$SvgSet$lookup, st.shapes, d),
+				_1: {ctor: '[]'}
+			});
+	};
+	return A2(
+		_elm_lang$core$List$map,
+		cp,
+		{
+			ctor: '::',
+			_0: 0,
+			_1: {
+				ctor: '::',
+				_0: 1,
+				_1: {
+					ctor: '::',
+					_0: 2,
+					_1: {ctor: '[]'}
+				}
+			}
+		});
+};
+var _user$project$SvgSet$svgDefs = function (st) {
+	return A2(
+		_elm_lang$svg$Svg$defs,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: _user$project$SvgSet$dropShadow,
+			_1: _user$project$SvgSet$clipPaths(st)
+		});
+};
+var _user$project$SvgSet$Style = F6(
+	function (a, b, c, d, e, f) {
+		return {colors: a, foreground: b, background: c, table: d, select: e, shapes: f};
 	});
+
+var _user$project$Main$style = _user$project$SvgSet$mySet;
+var _user$project$Main$init = {
+	ctor: '_Tuple2',
+	_0: {
+		game: _user$project$Game$none,
+		selected: {ctor: '[]'},
+		dealing: false,
+		answer: _elm_lang$core$Maybe$Nothing,
+		start: 0,
+		log: {ctor: '[]'},
+		message: _elm_lang$core$Maybe$Just('Start!')
+	},
+	_1: _elm_lang$core$Platform_Cmd$none
+};
+var _user$project$Main$Model = F7(
+	function (a, b, c, d, e, f, g) {
+		return {game: a, start: b, log: c, selected: d, dealing: e, answer: f, message: g};
+	});
+var _user$project$Main$EAsk = {ctor: 'EAsk'};
+var _user$project$Main$EDealMore = {ctor: 'EDealMore'};
+var _user$project$Main$score = F3(
+	function (log, start, end) {
+		var asks = _elm_lang$core$List$length(
+			A2(
+				_elm_lang$core$List$filter,
+				F2(
+					function (x, y) {
+						return _elm_lang$core$Native_Utils.eq(x, y);
+					})(_user$project$Main$EAsk),
+				log));
+		var asksecs = asks * 20;
+		var deals = _elm_lang$core$List$length(
+			A2(
+				_elm_lang$core$List$filter,
+				F2(
+					function (x, y) {
+						return _elm_lang$core$Native_Utils.eq(x, y);
+					})(_user$project$Main$EDealMore),
+				log));
+		var dealsecs = deals * 60;
+		var format = function (secs) {
+			var s = A2(_elm_lang$core$Basics_ops['%'], secs, 60);
+			var m = (secs / 60) | 0;
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(m),
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					':',
+					A3(
+						_elm_lang$core$String$padLeft,
+						2,
+						_elm_lang$core$Native_Utils.chr('0'),
+						_elm_lang$core$Basics$toString(s))));
+		};
+		var secs = _elm_lang$core$Basics$round(
+			_elm_lang$core$Time$inSeconds(end - start));
+		return A2(
+			_elm_lang$core$Basics_ops['++'],
+			format((secs + dealsecs) + asksecs),
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				' = ',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					format(secs),
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						' + ',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							format(asksecs),
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								' + ',
+								format(dealsecs)))))));
+	});
+var _user$project$Main$ESet = {ctor: 'ESet'};
+var _user$project$Main$GameOver = function (a) {
+	return {ctor: 'GameOver', _0: a};
+};
 var _user$project$Main$Ask = {ctor: 'Ask'};
 var _user$project$Main$DealMore = {ctor: 'DealMore'};
 var _user$project$Main$Deal = {ctor: 'Deal'};
+var _user$project$Main$Choose = function (a) {
+	return {ctor: 'Choose', _0: a};
+};
+var _user$project$Main$StartGame = function (a) {
+	return {ctor: 'StartGame', _0: a};
+};
+var _user$project$Main$NewGame = function (a) {
+	return {ctor: 'NewGame', _0: a};
+};
 var _user$project$Main$update = F2(
 	function (msg, model) {
 		var after = F2(
 			function (time, msg) {
-				return A2(
-					_elm_lang$core$Task$perform,
-					_elm_lang$core$Basics$always(msg),
-					_elm_lang$core$Process$sleep(time));
+				var task = A2(
+					_elm_lang$core$Task$andThen,
+					function (now) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							function (_p0) {
+								return _elm_lang$core$Task$succeed(now);
+							},
+							_elm_lang$core$Process$sleep(time));
+					},
+					_elm_lang$core$Time$now);
+				return A2(_elm_lang$core$Task$perform, msg, task);
 			});
-		var _p0 = msg;
-		switch (_p0.ctor) {
+		var _p1 = msg;
+		switch (_p1.ctor) {
+			case 'Go':
+				return {
+					ctor: '_Tuple2',
+					_0: model,
+					_1: _elm_lang$core$Platform_Cmd$batch(
+						{
+							ctor: '::',
+							_0: A2(_elm_lang$core$Random$generate, _user$project$Main$NewGame, _user$project$Game$init),
+							_1: {
+								ctor: '::',
+								_0: A2(_elm_lang$core$Task$perform, _user$project$Main$StartGame, _elm_lang$core$Time$now),
+								_1: {ctor: '[]'}
+							}
+						})
+				};
 			case 'NewGame':
 				return {
 					ctor: '_Tuple2',
-					_0: {
-						game: _p0._0,
-						selected: {ctor: '[]'},
-						dealing: false,
-						answer: _elm_lang$core$Maybe$Nothing
-					},
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{game: _p1._0}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'StartGame':
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{start: _p1._0, message: _elm_lang$core$Maybe$Nothing}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'Choose':
-				var _p2 = _p0._0;
-				if (A2(_user$project$Game$posEmpty, model.game, _p2)) {
+				var _p3 = _p1._0;
+				if (A2(_user$project$Game$posEmpty, model.game, _p3)) {
 					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 				} else {
-					if (A2(_elm_lang$core$List$member, _p2, model.selected)) {
+					if (A2(_elm_lang$core$List$member, _p3, model.selected)) {
 						return {
 							ctor: '_Tuple2',
 							_0: _elm_lang$core$Native_Utils.update(
 								model,
 								{
-									selected: A2(_elm_community$list_extra$List_Extra$remove, _p2, model.selected)
+									selected: A2(_elm_community$list_extra$List_Extra$remove, _p3, model.selected)
 								}),
 							_1: _elm_lang$core$Platform_Cmd$none
 						};
@@ -12501,17 +12661,18 @@ var _user$project$Main$update = F2(
 								_0: _elm_lang$core$Native_Utils.update(
 									model,
 									{
-										selected: {ctor: '::', _0: _p2, _1: model.selected}
+										selected: {ctor: '::', _0: _p3, _1: model.selected}
 									}),
 								_1: _elm_lang$core$Platform_Cmd$none
 							};
 						} else {
-							var _p1 = A2(
+							var _p2 = A2(
 								_user$project$Game$take,
 								model.game,
-								{ctor: '::', _0: _p2, _1: model.selected});
-							var isset = _p1._0;
-							var newgame = _p1._1;
+								{ctor: '::', _0: _p3, _1: model.selected});
+							var isset = _p2._0;
+							var newgame = _p2._1;
+							var over = _user$project$Game$over(newgame);
 							return isset ? {
 								ctor: '_Tuple2',
 								_0: _elm_lang$core$Native_Utils.update(
@@ -12520,17 +12681,21 @@ var _user$project$Main$update = F2(
 										game: newgame,
 										selected: {ctor: '[]'},
 										dealing: true,
-										answer: _elm_lang$core$Maybe$Nothing
+										answer: _elm_lang$core$Maybe$Nothing,
+										log: {ctor: '::', _0: _user$project$Main$ESet, _1: model.log}
 									}),
-								_1: A2(after, 500, _user$project$Main$Deal)
+								_1: A2(
+									after,
+									500,
+									over ? _user$project$Main$GameOver : _elm_lang$core$Basics$always(_user$project$Main$Deal))
 							} : {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 						}
 					}
 				}
 			case 'Deal':
-				var _p3 = _user$project$Game$compact(model.game);
-				var gamecpct = _p3._0;
-				var moves = _p3._1;
+				var _p4 = _user$project$Game$compact(model.game);
+				var gamecpct = _p4._0;
+				var moves = _p4._1;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -12550,7 +12715,20 @@ var _user$project$Main$update = F2(
 						model,
 						{
 							game: _user$project$Game$dealMore(model.game),
-							answer: _elm_lang$core$Maybe$Nothing
+							answer: _elm_lang$core$Maybe$Nothing,
+							log: {ctor: '::', _0: _user$project$Main$EDealMore, _1: model.log}
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'Ask':
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							answer: _elm_lang$core$Maybe$Just(
+								_user$project$Game$countSets(model.game)),
+							log: {ctor: '::', _0: _user$project$Main$EAsk, _1: model.log}
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -12560,16 +12738,14 @@ var _user$project$Main$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							answer: _elm_lang$core$Maybe$Just(
-								_user$project$Game$countSets(model.game))
+							message: _elm_lang$core$Maybe$Just(
+								A3(_user$project$Main$score, model.log, model.start, _p1._0))
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 		}
 	});
-var _user$project$Main$Choose = function (a) {
-	return {ctor: 'Choose', _0: a};
-};
+var _user$project$Main$Go = {ctor: 'Go'};
 var _user$project$Main$view = function (model) {
 	var cols = _user$project$Game$columns(model.game);
 	var viewBox = function () {
@@ -12586,10 +12762,10 @@ var _user$project$Main$view = function (model) {
 					' ',
 					_elm_lang$core$Basics$toString(height))));
 	}();
-	var trans = function (_p4) {
-		var _p5 = _p4;
-		var y = 45 + (90 * _p5._1);
-		var x = 30 + (60 * _p5._0);
+	var trans = function (_p5) {
+		var _p6 = _p5;
+		var y = 45 + (90 * _p6._1);
+		var x = 30 + (60 * _p6._0);
 		return A2(
 			_elm_lang$core$Basics_ops['++'],
 			'translate(',
@@ -12626,8 +12802,8 @@ var _user$project$Main$view = function (model) {
 			});
 	}();
 	var ask = function () {
-		var _p6 = model.answer;
-		if (_p6.ctor === 'Nothing') {
+		var _p7 = model.answer;
+		if (_p7.ctor === 'Nothing') {
 			var handler = model.dealing ? {ctor: '[]'} : {
 				ctor: '::',
 				_0: _elm_lang$svg$Svg_Events$onClick(_user$project$Main$Ask),
@@ -12664,33 +12840,34 @@ var _user$project$Main$view = function (model) {
 				{
 					ctor: '::',
 					_0: _user$project$SvgSet$letterCard(
-						_elm_lang$core$Basics$toString(_p6._0)),
+						_elm_lang$core$Basics$toString(_p7._0)),
 					_1: {ctor: '[]'}
 				});
 		}
 	}();
-	var d = function (_p7) {
-		var _p8 = _p7;
-		var _p9 = _p8._0;
+	var d = function (_p8) {
+		var _p9 = _p8;
+		var _p10 = _p9._0;
 		return A2(
 			_elm_lang$svg$Svg$g,
 			{
 				ctor: '::',
 				_0: _elm_lang$svg$Svg_Attributes$transform(
-					trans(_p9)),
+					trans(_p10)),
 				_1: {
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Events$onClick(
-						_user$project$Main$Choose(_p9)),
+						_user$project$Main$Choose(_p10)),
 					_1: {ctor: '[]'}
 				}
 			},
 			{
 				ctor: '::',
-				_0: A2(
+				_0: A3(
 					_user$project$SvgSet$draw,
-					A2(_elm_lang$core$List$member, _p9, model.selected),
-					_p8._1),
+					_user$project$Main$style,
+					A2(_elm_lang$core$List$member, _p10, model.selected),
+					_p9._1),
 				_1: {ctor: '[]'}
 			});
 	};
@@ -12698,42 +12875,58 @@ var _user$project$Main$view = function (model) {
 		_elm_lang$core$List$map,
 		d,
 		_elm_lang$core$Dict$toList(model.game.table));
-	return A2(
-		_elm_lang$svg$Svg$svg,
-		{
-			ctor: '::',
-			_0: _elm_lang$svg$Svg_Attributes$viewBox(viewBox),
-			_1: {ctor: '[]'}
-		},
-		{
-			ctor: '::',
-			_0: _user$project$SvgSet$svgDefs,
-			_1: {
+	var _p11 = model.message;
+	if (_p11.ctor === 'Nothing') {
+		return A2(
+			_elm_lang$svg$Svg$svg,
+			{
 				ctor: '::',
-				_0: more,
-				_1: {ctor: '::', _0: ask, _1: gs}
-			}
-		});
-};
-var _user$project$Main$NewGame = function (a) {
-	return {ctor: 'NewGame', _0: a};
-};
-var _user$project$Main$init = {
-	ctor: '_Tuple2',
-	_0: {
-		game: _user$project$Game$none,
-		selected: {ctor: '[]'},
-		dealing: false,
-		answer: _elm_lang$core$Maybe$Nothing
-	},
-	_1: A2(_elm_lang$core$Random$generate, _user$project$Main$NewGame, _user$project$Game$init)
+				_0: _elm_lang$svg$Svg_Attributes$viewBox(viewBox),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$style(
+						{
+							ctor: '::',
+							_0: {ctor: '_Tuple2', _0: 'background', _1: _user$project$Main$style.table},
+							_1: {ctor: '[]'}
+						}),
+					_1: {ctor: '[]'}
+				}
+			},
+			{
+				ctor: '::',
+				_0: _user$project$SvgSet$svgDefs(_user$project$Main$style),
+				_1: {
+					ctor: '::',
+					_0: more,
+					_1: {ctor: '::', _0: ask, _1: gs}
+				}
+			});
+	} else {
+		return A2(
+			_elm_lang$html$Html$div,
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html_Attributes$class('message'),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$Go),
+					_1: {ctor: '[]'}
+				}
+			},
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html$text(_p11._0),
+				_1: {ctor: '[]'}
+			});
+	}
 };
 var _user$project$Main$main = _elm_lang$html$Html$program(
 	{
 		init: _user$project$Main$init,
 		view: _user$project$Main$view,
 		update: _user$project$Main$update,
-		subscriptions: function (_p10) {
+		subscriptions: function (_p12) {
 			return _elm_lang$core$Platform_Sub$none;
 		}
 	})();
