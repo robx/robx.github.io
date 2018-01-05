@@ -11885,42 +11885,44 @@ var _user$project$SvgSet$letterCard = function (c) {
 		});
 };
 var _user$project$SvgSet$more = _user$project$SvgSet$letterCard('+');
-var _user$project$SvgSet$card = function (selected) {
-	return A2(
-		_elm_lang$svg$Svg$rect,
-		{
-			ctor: '::',
-			_0: _elm_lang$svg$Svg_Attributes$x('-25'),
-			_1: {
+var _user$project$SvgSet$card = F2(
+	function (st, selected) {
+		return A2(
+			_elm_lang$svg$Svg$rect,
+			{
 				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$y('-40'),
+				_0: _elm_lang$svg$Svg_Attributes$x('-25'),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$width('50'),
+					_0: _elm_lang$svg$Svg_Attributes$y('-40'),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$height('80'),
+						_0: _elm_lang$svg$Svg_Attributes$width('50'),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$rx('6'),
+							_0: _elm_lang$svg$Svg_Attributes$height('80'),
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$ry('6'),
+								_0: _elm_lang$svg$Svg_Attributes$rx('6'),
 								_1: {
 									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$stroke(
-										selected ? 'orange' : 'slategray'),
+									_0: _elm_lang$svg$Svg_Attributes$ry('6'),
 									_1: {
 										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$strokeWidth(
-											selected ? '1' : '0.2'),
+										_0: _elm_lang$svg$Svg_Attributes$stroke(
+											selected ? st.select : st.foreground),
 										_1: {
 											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$fill('white'),
+											_0: _elm_lang$svg$Svg_Attributes$strokeWidth(
+												selected ? '1' : '0.2'),
 											_1: {
 												ctor: '::',
-												_0: _elm_lang$svg$Svg_Attributes$style('filter:url(#dropshadow)'),
-												_1: {ctor: '[]'}
+												_0: _elm_lang$svg$Svg_Attributes$fill(st.background),
+												_1: {
+													ctor: '::',
+													_0: _elm_lang$svg$Svg_Attributes$style('filter:url(#dropshadow)'),
+													_1: {ctor: '[]'}
+												}
 											}
 										}
 									}
@@ -11929,10 +11931,9 @@ var _user$project$SvgSet$card = function (selected) {
 						}
 					}
 				}
-			}
-		},
-		{ctor: '[]'});
-};
+			},
+			{ctor: '[]'});
+	});
 var _user$project$SvgSet$dropShadow = A2(
 	_elm_lang$svg$Svg$filter,
 	{
@@ -12263,11 +12264,19 @@ var _user$project$SvgSet$rectangle = A2(
 	},
 	{ctor: '[]'});
 var _user$project$SvgSet$mySet = {
-	colors: {ctor: '_Tuple3', _0: 'red', _1: 'rgb(248,190,100)', _2: 'blue'},
+	colors: {ctor: '_Tuple3', _0: 'rgb(5,135,137)', _1: 'rgb(213,75,26)', _2: 'rgb(227,167,45)'},
+	foreground: 'rgb(80,61,46)',
+	background: 'rgb(246,242,231)',
+	table: 'rgb(240,236,201)',
+	select: 'orange',
 	shapes: {ctor: '_Tuple3', _0: _user$project$SvgSet$rectangle, _1: _user$project$SvgSet$ellipse, _2: _user$project$SvgSet$lens}
 };
 var _user$project$SvgSet$standardSet = {
 	colors: {ctor: '_Tuple3', _0: 'rgb(229,46,37)', _1: 'rgb(72,128,52)', _2: 'rgb(116,44,177)'},
+	foreground: 'black',
+	background: 'white',
+	table: 'white',
+	select: 'orange',
 	shapes: {ctor: '_Tuple3', _0: _user$project$SvgSet$diamond, _1: _user$project$SvgSet$oval, _2: _user$project$SvgSet$squiggle}
 };
 var _user$project$SvgSet$lookup = F2(
@@ -12424,7 +12433,7 @@ var _user$project$SvgSet$draw = F3(
 				_elm_lang$core$Basics_ops['++'],
 				{
 					ctor: '::',
-					_0: _user$project$SvgSet$card(selected),
+					_0: A2(_user$project$SvgSet$card, st, selected),
 					_1: {ctor: '[]'}
 				},
 				A2(_elm_lang$core$List$map, sym, locs)));
@@ -12475,9 +12484,9 @@ var _user$project$SvgSet$svgDefs = function (st) {
 			_1: _user$project$SvgSet$clipPaths(st)
 		});
 };
-var _user$project$SvgSet$Style = F2(
-	function (a, b) {
-		return {colors: a, shapes: b};
+var _user$project$SvgSet$Style = F6(
+	function (a, b, c, d, e, f) {
+		return {colors: a, foreground: b, background: c, table: d, select: e, shapes: f};
 	});
 
 var _user$project$Main$style = _user$project$SvgSet$mySet;
@@ -12737,7 +12746,16 @@ var _user$project$Main$view = function (model) {
 		{
 			ctor: '::',
 			_0: _elm_lang$svg$Svg_Attributes$viewBox(viewBox),
-			_1: {ctor: '[]'}
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$html$Html_Attributes$style(
+					{
+						ctor: '::',
+						_0: {ctor: '_Tuple2', _0: 'background', _1: _user$project$Main$style.table},
+						_1: {ctor: '[]'}
+					}),
+				_1: {ctor: '[]'}
+			}
 		},
 		{
 			ctor: '::',
