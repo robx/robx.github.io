@@ -11784,6 +11784,18 @@ var _user$project$Game$init = A2(
 			return {deck: d, table: _elm_lang$core$Dict$empty};
 		},
 		_user$project$Game$shuffled));
+var _user$project$Game$initShort = A2(
+	_elm_lang$core$Random$map,
+	_user$project$Game$deal,
+	A2(
+		_elm_lang$core$Random$map,
+		function (d) {
+			return {deck: d, table: _elm_lang$core$Dict$empty};
+		},
+		A2(
+			_elm_lang$core$Random$map,
+			_elm_lang$core$List$drop(60),
+			_user$project$Game$shuffled)));
 var _user$project$Game$dealMoreAction = function () {
 	var col = function (c) {
 		return {
@@ -12495,43 +12507,35 @@ var _user$project$SvgSet$Style = F6(
 	});
 
 var _user$project$Main$style = _user$project$SvgSet$mySet;
-var _user$project$Main$init = {
-	ctor: '_Tuple2',
-	_0: {
-		game: _user$project$Game$none,
-		selected: {ctor: '[]'},
-		dealing: false,
-		answer: _elm_lang$core$Maybe$Nothing,
+var _user$project$Main$initGame = function (game) {
+	return {
+		game: game,
 		start: 0,
 		log: {ctor: '[]'},
-		message: _elm_lang$core$Maybe$Just('Start!')
-	},
-	_1: _elm_lang$core$Platform_Cmd$none
+		selected: {ctor: '[]'},
+		dealing: false,
+		answer: _elm_lang$core$Maybe$Nothing
+	};
 };
-var _user$project$Main$Model = F7(
-	function (a, b, c, d, e, f, g) {
-		return {game: a, start: b, log: c, selected: d, dealing: e, answer: f, message: g};
+var _user$project$Main$logScore = _elm_lang$core$Native_Platform.outgoingPort(
+	'logScore',
+	function (v) {
+		return v;
 	});
-var _user$project$Main$EAsk = {ctor: 'EAsk'};
-var _user$project$Main$EDealMore = {ctor: 'EDealMore'};
+var _user$project$Main$GameModel = F6(
+	function (a, b, c, d, e, f) {
+		return {game: a, start: b, log: c, selected: d, dealing: e, answer: f};
+	});
+var _user$project$Main$EDealMoreNonzero = {ctor: 'EDealMoreNonzero'};
 var _user$project$Main$score = F3(
 	function (log, start, end) {
-		var asks = _elm_lang$core$List$length(
-			A2(
-				_elm_lang$core$List$filter,
-				F2(
-					function (x, y) {
-						return _elm_lang$core$Native_Utils.eq(x, y);
-					})(_user$project$Main$EAsk),
-				log));
-		var asksecs = asks * 20;
 		var deals = _elm_lang$core$List$length(
 			A2(
 				_elm_lang$core$List$filter,
 				F2(
 					function (x, y) {
 						return _elm_lang$core$Native_Utils.eq(x, y);
-					})(_user$project$Main$EDealMore),
+					})(_user$project$Main$EDealMoreNonzero),
 				log));
 		var dealsecs = deals * 60;
 		var format = function (secs) {
@@ -12551,43 +12555,60 @@ var _user$project$Main$score = F3(
 		};
 		var secs = _elm_lang$core$Basics$round(
 			_elm_lang$core$Time$inSeconds(end - start));
-		return A2(
-			_elm_lang$core$Basics_ops['++'],
-			format((secs + dealsecs) + asksecs),
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				' = ',
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					format(secs),
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						' + ',
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							format(asksecs),
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								' + ',
-								format(dealsecs)))))));
+		var totalsecs = secs + dealsecs;
+		return {
+			ctor: '_Tuple2',
+			_0: totalsecs,
+			_1: A2(
+				_elm_lang$core$String$join,
+				' ',
+				{
+					ctor: '::',
+					_0: 'Your time:',
+					_1: {
+						ctor: '::',
+						_0: format(totalsecs),
+						_1: {
+							ctor: '::',
+							_0: '=',
+							_1: {
+								ctor: '::',
+								_0: format(secs),
+								_1: {
+									ctor: '::',
+									_0: '+',
+									_1: {
+										ctor: '::',
+										_0: format(dealsecs),
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}
+					}
+				})
+		};
 	});
+var _user$project$Main$EDealMoreZero = {ctor: 'EDealMoreZero'};
 var _user$project$Main$ESet = {ctor: 'ESet'};
-var _user$project$Main$GameOver = function (a) {
-	return {ctor: 'GameOver', _0: a};
+var _user$project$Main$Play = function (a) {
+	return {ctor: 'Play', _0: a};
 };
-var _user$project$Main$Ask = {ctor: 'Ask'};
+var _user$project$Main$Start = function (a) {
+	return {ctor: 'Start', _0: a};
+};
+var _user$project$Main$init = {
+	ctor: '_Tuple2',
+	_0: _user$project$Main$Start(_elm_lang$core$Maybe$Nothing),
+	_1: _elm_lang$core$Platform_Cmd$none
+};
+var _user$project$Main$GameOver = F3(
+	function (a, b, c) {
+		return {ctor: 'GameOver', _0: a, _1: b, _2: c};
+	});
 var _user$project$Main$DealMore = {ctor: 'DealMore'};
 var _user$project$Main$Deal = {ctor: 'Deal'};
-var _user$project$Main$Choose = function (a) {
-	return {ctor: 'Choose', _0: a};
-};
-var _user$project$Main$StartGame = function (a) {
-	return {ctor: 'StartGame', _0: a};
-};
-var _user$project$Main$NewGame = function (a) {
-	return {ctor: 'NewGame', _0: a};
-};
-var _user$project$Main$update = F2(
+var _user$project$Main$updateGame = F2(
 	function (msg, model) {
 		var after = F2(
 			function (time, msg) {
@@ -12606,35 +12627,12 @@ var _user$project$Main$update = F2(
 			});
 		var _p1 = msg;
 		switch (_p1.ctor) {
-			case 'Go':
-				return {
-					ctor: '_Tuple2',
-					_0: model,
-					_1: _elm_lang$core$Platform_Cmd$batch(
-						{
-							ctor: '::',
-							_0: A2(_elm_lang$core$Random$generate, _user$project$Main$NewGame, _user$project$Game$init),
-							_1: {
-								ctor: '::',
-								_0: A2(_elm_lang$core$Task$perform, _user$project$Main$StartGame, _elm_lang$core$Time$now),
-								_1: {ctor: '[]'}
-							}
-						})
-				};
-			case 'NewGame':
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{game: _p1._0}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
 			case 'StartGame':
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{start: _p1._0, message: _elm_lang$core$Maybe$Nothing}),
+						{start: _p1._0}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'Choose':
@@ -12672,23 +12670,27 @@ var _user$project$Main$update = F2(
 								{ctor: '::', _0: _p3, _1: model.selected});
 							var isset = _p2._0;
 							var newgame = _p2._1;
-							var over = _user$project$Game$over(newgame);
-							return isset ? {
-								ctor: '_Tuple2',
-								_0: _elm_lang$core$Native_Utils.update(
-									model,
-									{
-										game: newgame,
-										selected: {ctor: '[]'},
-										dealing: true,
-										answer: _elm_lang$core$Maybe$Nothing,
-										log: {ctor: '::', _0: _user$project$Main$ESet, _1: model.log}
-									}),
-								_1: A2(
-									after,
-									500,
-									over ? _user$project$Main$GameOver : _elm_lang$core$Basics$always(_user$project$Main$Deal))
-							} : {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+							if (isset) {
+								var log = {ctor: '::', _0: _user$project$Main$ESet, _1: model.log};
+								return {
+									ctor: '_Tuple2',
+									_0: _elm_lang$core$Native_Utils.update(
+										model,
+										{
+											game: newgame,
+											selected: {ctor: '[]'},
+											dealing: true,
+											answer: _elm_lang$core$Maybe$Nothing,
+											log: log
+										}),
+									_1: A2(
+										after,
+										500,
+										_elm_lang$core$Basics$always(_user$project$Main$Deal))
+								};
+							} else {
+								return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+							}
 						}
 					}
 				}
@@ -12709,44 +12711,50 @@ var _user$project$Main$update = F2(
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'DealMore':
-				return {
+				var nsets = _user$project$Game$countSets(model.game);
+				var over = _user$project$Game$over(model.game);
+				return over ? {
+					ctor: '_Tuple2',
+					_0: model,
+					_1: A2(
+						after,
+						500,
+						A2(_user$project$Main$GameOver, model.log, model.start))
+				} : (_elm_lang$core$Native_Utils.eq(nsets, 0) ? {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
 							game: _user$project$Game$dealMore(model.game),
 							answer: _elm_lang$core$Maybe$Nothing,
-							log: {ctor: '::', _0: _user$project$Main$EDealMore, _1: model.log}
+							log: {ctor: '::', _0: _user$project$Main$EDealMoreZero, _1: model.log}
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'Ask':
-				return {
+				} : {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
 							answer: _elm_lang$core$Maybe$Just(
 								_user$project$Game$countSets(model.game)),
-							log: {ctor: '::', _0: _user$project$Main$EAsk, _1: model.log}
+							log: {ctor: '::', _0: _user$project$Main$EDealMoreNonzero, _1: model.log}
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
-				};
+				});
 			default:
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							message: _elm_lang$core$Maybe$Just(
-								A3(_user$project$Main$score, model.log, model.start, _p1._0))
-						}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
+				return _elm_lang$core$Native_Utils.crashCase(
+					'Main',
+					{
+						start: {line: 230, column: 5},
+						end: {line: 287, column: 36}
+					},
+					_p1)('bad state');
 		}
 	});
-var _user$project$Main$Go = {ctor: 'Go'};
-var _user$project$Main$view = function (model) {
+var _user$project$Main$Choose = function (a) {
+	return {ctor: 'Choose', _0: a};
+};
+var _user$project$Main$viewGame = function (model) {
 	var cols = _user$project$Game$columns(model.game);
 	var viewBox = function () {
 		var height = (80 + 10) * 3;
@@ -12762,10 +12770,10 @@ var _user$project$Main$view = function (model) {
 					' ',
 					_elm_lang$core$Basics$toString(height))));
 	}();
-	var trans = function (_p5) {
-		var _p6 = _p5;
-		var y = 45 + (90 * _p6._1);
-		var x = 30 + (60 * _p6._0);
+	var trans = function (_p6) {
+		var _p7 = _p6;
+		var y = 45 + (90 * _p7._1);
+		var x = 30 + (60 * _p7._0);
 		return A2(
 			_elm_lang$core$Basics_ops['++'],
 			'translate(',
@@ -12781,7 +12789,8 @@ var _user$project$Main$view = function (model) {
 						')'))));
 	};
 	var more = function () {
-		var handler = (model.dealing || _user$project$Game$deckEmpty(model.game)) ? {ctor: '[]'} : {
+		var disabled = model.dealing || (!_elm_lang$core$Native_Utils.eq(model.answer, _elm_lang$core$Maybe$Nothing));
+		var handler = disabled ? {ctor: '[]'} : {
 			ctor: '::',
 			_0: _elm_lang$svg$Svg_Events$onClick(_user$project$Main$DealMore),
 			_1: {
@@ -12790,6 +12799,14 @@ var _user$project$Main$view = function (model) {
 				_1: {ctor: '[]'}
 			}
 		};
+		var text = function () {
+			var _p8 = model.answer;
+			if (_p8.ctor === 'Just') {
+				return _elm_lang$core$Basics$toString(_p8._0);
+			} else {
+				return _user$project$Game$deckEmpty(model.game) ? '.' : '+';
+			}
+		}();
 		return A2(
 			_elm_lang$svg$Svg$g,
 			{
@@ -12801,67 +12818,23 @@ var _user$project$Main$view = function (model) {
 			},
 			{
 				ctor: '::',
-				_0: _user$project$SvgSet$letterCard('+'),
+				_0: _user$project$SvgSet$letterCard(text),
 				_1: {ctor: '[]'}
 			});
 	}();
-	var ask = function () {
-		var _p7 = model.answer;
-		if (_p7.ctor === 'Nothing') {
-			var handler = model.dealing ? {ctor: '[]'} : {
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Events$onClick(_user$project$Main$Ask),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$style('cursor: pointer;'),
-					_1: {ctor: '[]'}
-				}
-			};
-			return A2(
-				_elm_lang$svg$Svg$g,
-				{
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$transform(
-						trans(
-							{ctor: '_Tuple2', _0: cols, _1: 1})),
-					_1: handler
-				},
-				{
-					ctor: '::',
-					_0: _user$project$SvgSet$letterCard('?'),
-					_1: {ctor: '[]'}
-				});
-		} else {
-			return A2(
-				_elm_lang$svg$Svg$g,
-				{
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$transform(
-						trans(
-							{ctor: '_Tuple2', _0: cols, _1: 1})),
-					_1: {ctor: '[]'}
-				},
-				{
-					ctor: '::',
-					_0: _user$project$SvgSet$letterCard(
-						_elm_lang$core$Basics$toString(_p7._0)),
-					_1: {ctor: '[]'}
-				});
-		}
-	}();
-	var d = function (_p8) {
-		var _p9 = _p8;
-		var _p10 = _p9._0;
+	var d = function (_p9) {
+		var _p10 = _p9;
+		var _p11 = _p10._0;
 		return A2(
 			_elm_lang$svg$Svg$g,
 			{
 				ctor: '::',
 				_0: _elm_lang$svg$Svg_Attributes$transform(
-					trans(_p10)),
+					trans(_p11)),
 				_1: {
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Events$onClick(
-						_user$project$Main$Choose(_p10)),
+						_user$project$Main$Choose(_p11)),
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$svg$Svg_Attributes$style('cursor: pointer;'),
@@ -12874,8 +12847,8 @@ var _user$project$Main$view = function (model) {
 				_0: A3(
 					_user$project$SvgSet$draw,
 					_user$project$Main$style,
-					A2(_elm_lang$core$List$member, _p10, model.selected),
-					_p9._1),
+					A2(_elm_lang$core$List$member, _p11, model.selected),
+					_p10._1),
 				_1: {ctor: '[]'}
 			});
 	};
@@ -12883,50 +12856,163 @@ var _user$project$Main$view = function (model) {
 		_elm_lang$core$List$map,
 		d,
 		_elm_lang$core$Dict$toList(model.game.table));
-	var _p11 = model.message;
-	if (_p11.ctor === 'Nothing') {
-		return A2(
-			_elm_lang$svg$Svg$svg,
-			{
+	return A2(
+		_elm_lang$svg$Svg$svg,
+		{
+			ctor: '::',
+			_0: _elm_lang$svg$Svg_Attributes$viewBox(viewBox),
+			_1: {
 				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$viewBox(viewBox),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$style(
+				_0: _elm_lang$html$Html_Attributes$style(
+					{
+						ctor: '::',
+						_0: {ctor: '_Tuple2', _0: 'background', _1: _user$project$Main$style.table},
+						_1: {ctor: '[]'}
+					}),
+				_1: {ctor: '[]'}
+			}
+		},
+		{
+			ctor: '::',
+			_0: _user$project$SvgSet$svgDefs(_user$project$Main$style),
+			_1: {ctor: '::', _0: more, _1: gs}
+		});
+};
+var _user$project$Main$StartGame = function (a) {
+	return {ctor: 'StartGame', _0: a};
+};
+var _user$project$Main$NewGame = function (a) {
+	return {ctor: 'NewGame', _0: a};
+};
+var _user$project$Main$update = F2(
+	function (msg, model) {
+		var _p12 = msg;
+		switch (_p12.ctor) {
+			case 'Go':
+				return {
+					ctor: '_Tuple2',
+					_0: model,
+					_1: _elm_lang$core$Platform_Cmd$batch(
 						{
 							ctor: '::',
-							_0: {ctor: '_Tuple2', _0: 'background', _1: _user$project$Main$style.table},
+							_0: A2(_elm_lang$core$Random$generate, _user$project$Main$NewGame, _user$project$Game$init),
+							_1: {
+								ctor: '::',
+								_0: A2(_elm_lang$core$Task$perform, _user$project$Main$StartGame, _elm_lang$core$Time$now),
+								_1: {ctor: '[]'}
+							}
+						})
+				};
+			case 'GoShort':
+				return {
+					ctor: '_Tuple2',
+					_0: model,
+					_1: _elm_lang$core$Platform_Cmd$batch(
+						{
+							ctor: '::',
+							_0: A2(_elm_lang$core$Random$generate, _user$project$Main$NewGame, _user$project$Game$initShort),
+							_1: {
+								ctor: '::',
+								_0: A2(_elm_lang$core$Task$perform, _user$project$Main$StartGame, _elm_lang$core$Time$now),
+								_1: {ctor: '[]'}
+							}
+						})
+				};
+			case 'NewGame':
+				return {
+					ctor: '_Tuple2',
+					_0: _user$project$Main$Play(
+						_user$project$Main$initGame(_p12._0)),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'GameOver':
+				var _p13 = A3(_user$project$Main$score, _p12._0, _p12._1, _p12._2);
+				var secs = _p13._0;
+				var msg = _p13._1;
+				return {
+					ctor: '_Tuple2',
+					_0: _user$project$Main$Start(
+						_elm_lang$core$Maybe$Just(msg)),
+					_1: _user$project$Main$logScore(secs)
+				};
+			default:
+				var _p14 = model;
+				if (_p14.ctor === 'Play') {
+					var _p15 = A2(_user$project$Main$updateGame, msg, _p14._0);
+					var updgame = _p15._0;
+					var cmd = _p15._1;
+					return {
+						ctor: '_Tuple2',
+						_0: _user$project$Main$Play(updgame),
+						_1: cmd
+					};
+				} else {
+					return _elm_lang$core$Native_Utils.crashCase(
+						'Main',
+						{
+							start: {line: 202, column: 13},
+							end: {line: 211, column: 44}
+						},
+						_p14)('bad state');
+				}
+		}
+	});
+var _user$project$Main$GoShort = {ctor: 'GoShort'};
+var _user$project$Main$Go = {ctor: 'Go'};
+var _user$project$Main$viewStart = function (msg) {
+	var m = A2(_elm_lang$core$Maybe$withDefault, 'Start a game', msg);
+	return A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$div,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text(m),
+					_1: {ctor: '[]'}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$button,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$Go),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text('Full deck'),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$button,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$GoShort),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text('Small deck'),
 							_1: {ctor: '[]'}
 						}),
 					_1: {ctor: '[]'}
 				}
-			},
-			{
-				ctor: '::',
-				_0: _user$project$SvgSet$svgDefs(_user$project$Main$style),
-				_1: {
-					ctor: '::',
-					_0: more,
-					_1: {ctor: '::', _0: ask, _1: gs}
-				}
-			});
+			}
+		});
+};
+var _user$project$Main$view = function (model) {
+	var _p17 = model;
+	if (_p17.ctor === 'Start') {
+		return _user$project$Main$viewStart(_p17._0);
 	} else {
-		return A2(
-			_elm_lang$html$Html$div,
-			{
-				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$class('message'),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$Go),
-					_1: {ctor: '[]'}
-				}
-			},
-			{
-				ctor: '::',
-				_0: _elm_lang$html$Html$text(_p11._0),
-				_1: {ctor: '[]'}
-			});
+		return _user$project$Main$viewGame(_p17._0);
 	}
 };
 var _user$project$Main$main = _elm_lang$html$Html$program(
@@ -12934,7 +13020,7 @@ var _user$project$Main$main = _elm_lang$html$Html$program(
 		init: _user$project$Main$init,
 		view: _user$project$Main$view,
 		update: _user$project$Main$update,
-		subscriptions: function (_p12) {
+		subscriptions: function (_p18) {
 			return _elm_lang$core$Platform_Sub$none;
 		}
 	})();
