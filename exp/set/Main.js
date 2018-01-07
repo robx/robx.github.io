@@ -12775,6 +12775,7 @@ var _user$project$Main$GameModel = F6(
 		return {game: a, start: b, log: c, selected: d, dealing: e, answer: f};
 	});
 var _user$project$Main$EDealMoreNonzero = {ctor: 'EDealMoreNonzero'};
+var _user$project$Main$EDealMoreZero = {ctor: 'EDealMoreZero'};
 var _user$project$Main$score = F3(
 	function (log, start, end) {
 		var gooddeals = _elm_lang$core$List$length(
@@ -12783,7 +12784,7 @@ var _user$project$Main$score = F3(
 				F2(
 					function (x, y) {
 						return _elm_lang$core$Native_Utils.eq(x, y);
-					})(_user$project$Main$EDealMoreNonzero),
+					})(_user$project$Main$EDealMoreZero),
 				log));
 		var gooddealsecs = gooddeals * 45;
 		var baddeals = _elm_lang$core$List$length(
@@ -12854,7 +12855,6 @@ var _user$project$Main$score = F3(
 				})
 		};
 	});
-var _user$project$Main$EDealMoreZero = {ctor: 'EDealMoreZero'};
 var _user$project$Main$ESet = {ctor: 'ESet'};
 var _user$project$Main$Play = function (a) {
 	return {ctor: 'Play', _0: a};
