@@ -12399,14 +12399,6 @@ var _user$project$SvgSet$rectangle = A2(
 		}
 	},
 	{ctor: '[]'});
-var _user$project$SvgSet$triangle = A2(
-	_elm_lang$svg$Svg$polygon,
-	{
-		ctor: '::',
-		_0: _elm_lang$svg$Svg_Attributes$points('5.2,-3 0,6 -5.2,-3'),
-		_1: {ctor: '[]'}
-	},
-	{ctor: '[]'});
 var _user$project$SvgSet$circle = A2(
 	_elm_lang$svg$Svg$ellipse,
 	{
@@ -12417,105 +12409,186 @@ var _user$project$SvgSet$circle = A2(
 			_0: _elm_lang$svg$Svg_Attributes$cy('0'),
 			_1: {
 				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$rx('6'),
+				_0: _elm_lang$svg$Svg_Attributes$rx('7'),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$ry('6'),
+					_0: _elm_lang$svg$Svg_Attributes$ry('7'),
 					_1: {ctor: '[]'}
 				}
 			}
 		}
 	},
 	{ctor: '[]'});
+var _user$project$SvgSet$toPoints = function (_p8) {
+	return A2(
+		_elm_lang$core$String$join,
+		' ',
+		A2(
+			_elm_lang$core$List$map,
+			function (_p9) {
+				var _p10 = _p9;
+				return A2(
+					_elm_lang$core$Basics_ops['++'],
+					_elm_lang$core$Basics$toString(_p10._0),
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						',',
+						_elm_lang$core$Basics$toString(_p10._1)));
+			},
+			_p8));
+};
+var _user$project$SvgSet$rotate = function (a) {
+	var r = ((2 * _elm_lang$core$Basics$pi) * a) / 360;
+	return _elm_lang$core$List$map(
+		function (_p11) {
+			var _p12 = _p11;
+			var _p14 = _p12._1;
+			var _p13 = _p12._0;
+			return {
+				ctor: '_Tuple2',
+				_0: (_elm_lang$core$Basics$cos(r) * _p13) + (_elm_lang$core$Basics$sin(r) * _p14),
+				_1: (_elm_lang$core$Basics$sin(r) * _p13) - (_elm_lang$core$Basics$cos(r) * _p14)
+			};
+		});
+};
+var _user$project$SvgSet$scale = function (f) {
+	return _elm_lang$core$List$map(
+		function (_p15) {
+			var _p16 = _p15;
+			return {ctor: '_Tuple2', _0: f * _p16._0, _1: f * _p16._1};
+		});
+};
+var _user$project$SvgSet$ngon = function (n) {
+	var z = (2 * _elm_lang$core$Basics$pi) / _elm_lang$core$Basics$toFloat(n);
+	return A2(
+		_elm_lang$core$List$map,
+		function (k) {
+			return {
+				ctor: '_Tuple2',
+				_0: _elm_lang$core$Basics$cos(
+					_elm_lang$core$Basics$toFloat(k) * z),
+				_1: _elm_lang$core$Basics$sin(
+					_elm_lang$core$Basics$toFloat(k) * z)
+			};
+		},
+		A2(_elm_lang$core$List$range, 0, n - 1));
+};
 var _user$project$SvgSet$square = A2(
-	_elm_lang$svg$Svg$rect,
+	_elm_lang$svg$Svg$polygon,
 	{
 		ctor: '::',
-		_0: _elm_lang$svg$Svg_Attributes$x('-6'),
-		_1: {
-			ctor: '::',
-			_0: _elm_lang$svg$Svg_Attributes$y('-6'),
-			_1: {
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$width('12'),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$height('12'),
-					_1: {ctor: '[]'}
-				}
-			}
-		}
+		_0: _elm_lang$svg$Svg_Attributes$points(
+			_user$project$SvgSet$toPoints(
+				A2(
+					_user$project$SvgSet$scale,
+					8,
+					A2(
+						_user$project$SvgSet$rotate,
+						45,
+						_user$project$SvgSet$ngon(4))))),
+		_1: {ctor: '[]'}
 	},
 	{ctor: '[]'});
-var _user$project$SvgSet$rectLocations = function (count) {
-	var _p8 = count;
-	switch (_p8) {
-		case 0:
-			return {
-				ctor: '::',
-				_0: {ctor: '_Tuple2', _0: 0, _1: 0},
-				_1: {ctor: '[]'}
-			};
-		case 1:
-			return {
-				ctor: '::',
-				_0: {ctor: '_Tuple2', _0: 0, _1: 10},
-				_1: {
-					ctor: '::',
-					_0: {ctor: '_Tuple2', _0: 0, _1: -10},
-					_1: {ctor: '[]'}
-				}
-			};
-		default:
-			return {
-				ctor: '::',
-				_0: {ctor: '_Tuple2', _0: 0, _1: 20},
-				_1: {
-					ctor: '::',
-					_0: {ctor: '_Tuple2', _0: 0, _1: 0},
-					_1: {
-						ctor: '::',
-						_0: {ctor: '_Tuple2', _0: 0, _1: -20},
-						_1: {ctor: '[]'}
-					}
-				}
-			};
-	}
+var _user$project$SvgSet$triangle = A2(
+	_elm_lang$svg$Svg$polygon,
+	{
+		ctor: '::',
+		_0: _elm_lang$svg$Svg_Attributes$points(
+			_user$project$SvgSet$toPoints(
+				A2(
+					_user$project$SvgSet$scale,
+					8.5,
+					_user$project$SvgSet$ngon(3)))),
+		_1: {ctor: '[]'}
+	},
+	{ctor: '[]'});
+var _user$project$SvgSet$trans = function (_p17) {
+	var _p18 = _p17;
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		'translate(',
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			_elm_lang$core$Basics$toString(_p18._0),
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				',',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					_elm_lang$core$Basics$toString(_p18._1),
+					')'))));
 };
 var _user$project$SvgSet$squareLocations = function (count) {
-	var _p9 = count;
-	switch (_p9) {
-		case 0:
-			return {
-				ctor: '::',
-				_0: {ctor: '_Tuple2', _0: 0, _1: 0},
-				_1: {ctor: '[]'}
-			};
-		case 1:
-			return {
-				ctor: '::',
-				_0: {ctor: '_Tuple2', _0: 0, _1: 10},
-				_1: {
-					ctor: '::',
-					_0: {ctor: '_Tuple2', _0: 0, _1: -10},
-					_1: {ctor: '[]'}
-				}
-			};
-		default:
-			return {
-				ctor: '::',
-				_0: {ctor: '_Tuple2', _0: 10.4, _1: -12},
-				_1: {
-					ctor: '::',
-					_0: {ctor: '_Tuple2', _0: 0, _1: 12},
-					_1: {
+	return A2(
+		_elm_lang$core$List$map,
+		_user$project$SvgSet$trans,
+		function () {
+			var _p19 = count;
+			switch (_p19) {
+				case 0:
+					return {
 						ctor: '::',
-						_0: {ctor: '_Tuple2', _0: -10.4, _1: -12},
+						_0: {ctor: '_Tuple2', _0: 0, _1: 0},
 						_1: {ctor: '[]'}
-					}
-				}
-			};
-	}
+					};
+				case 1:
+					return A2(
+						_user$project$SvgSet$rotate,
+						-45,
+						A2(
+							_user$project$SvgSet$scale,
+							12,
+							_user$project$SvgSet$ngon(2)));
+				default:
+					return A2(
+						_user$project$SvgSet$rotate,
+						15,
+						A2(
+							_user$project$SvgSet$scale,
+							12,
+							_user$project$SvgSet$ngon(3)));
+			}
+		}());
+};
+var _user$project$SvgSet$rectLocations = function (count) {
+	return A2(
+		_elm_lang$core$List$map,
+		_user$project$SvgSet$trans,
+		function () {
+			var _p20 = count;
+			switch (_p20) {
+				case 0:
+					return {
+						ctor: '::',
+						_0: {ctor: '_Tuple2', _0: 0, _1: 0},
+						_1: {ctor: '[]'}
+					};
+				case 1:
+					return {
+						ctor: '::',
+						_0: {ctor: '_Tuple2', _0: 0, _1: 10},
+						_1: {
+							ctor: '::',
+							_0: {ctor: '_Tuple2', _0: 0, _1: -10},
+							_1: {ctor: '[]'}
+						}
+					};
+				default:
+					return {
+						ctor: '::',
+						_0: {ctor: '_Tuple2', _0: 0, _1: 20},
+						_1: {
+							ctor: '::',
+							_0: {ctor: '_Tuple2', _0: 0, _1: 0},
+							_1: {
+								ctor: '::',
+								_0: {ctor: '_Tuple2', _0: 0, _1: -20},
+								_1: {ctor: '[]'}
+							}
+						}
+					};
+			}
+		}());
 };
 var _user$project$SvgSet$squareLayout = {
 	locations: _user$project$SvgSet$squareLocations,
@@ -12568,41 +12641,25 @@ var _user$project$SvgSet$standardSet = {
 	shapes: {ctor: '_Tuple3', _0: _user$project$SvgSet$diamond, _1: _user$project$SvgSet$oval, _2: _user$project$SvgSet$squiggle}
 };
 var _user$project$SvgSet$lookup = F2(
-	function (_p10, p) {
-		var _p11 = _p10;
-		var _p12 = p;
-		switch (_p12) {
+	function (_p21, p) {
+		var _p22 = _p21;
+		var _p23 = p;
+		switch (_p23) {
 			case 0:
-				return _p11._0;
+				return _p22._0;
 			case 1:
-				return _p11._1;
+				return _p22._1;
 			default:
-				return _p11._2;
+				return _p22._2;
 		}
 	});
 var _user$project$SvgSet$draw = F4(
 	function (layout, st, selected, c) {
-		var trans = function (_p13) {
-			var _p14 = _p13;
-			return A2(
-				_elm_lang$core$Basics_ops['++'],
-				'translate(',
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(_p14._0),
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						',',
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(_p14._1),
-							')'))));
-		};
 		var elt = A2(_user$project$SvgSet$lookup, st.shapes, c.shape);
 		var col = A2(_user$project$SvgSet$lookup, st.colors, c.color);
 		var f = function () {
-			var _p15 = c.fill;
-			switch (_p15) {
+			var _p24 = c.fill;
+			switch (_p24) {
 				case 0:
 					return col;
 				case 1:
@@ -12612,8 +12669,8 @@ var _user$project$SvgSet$draw = F4(
 			}
 		}();
 		var shade = function () {
-			var _p16 = c.fill;
-			if (_p16 === 1) {
+			var _p25 = c.fill;
+			if (_p25 === 1) {
 				return {
 					ctor: '::',
 					_0: A2(
@@ -12622,8 +12679,8 @@ var _user$project$SvgSet$draw = F4(
 							ctor: '::',
 							_0: _elm_lang$svg$Svg_Attributes$clipPath(
 								function () {
-									var _p17 = c.shape;
-									switch (_p17) {
+									var _p26 = c.shape;
+									switch (_p26) {
 										case 0:
 											return 'url(#clip0)';
 										case 1:
@@ -12653,13 +12710,12 @@ var _user$project$SvgSet$draw = F4(
 				return {ctor: '[]'};
 			}
 		}();
-		var sym = function (p) {
+		var sym = function (t) {
 			return A2(
 				_elm_lang$svg$Svg$g,
 				{
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$transform(
-						trans(p)),
+					_0: _elm_lang$svg$Svg_Attributes$transform(t),
 					_1: {ctor: '[]'}
 				},
 				A2(
