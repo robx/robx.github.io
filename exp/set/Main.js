@@ -12664,7 +12664,7 @@ var _user$project$Main$GameModel = F6(
 var _user$project$Main$EDealMoreNonzero = {ctor: 'EDealMoreNonzero'};
 var _user$project$Main$score = F3(
 	function (log, start, end) {
-		var deals = _elm_lang$core$List$length(
+		var gooddeals = _elm_lang$core$List$length(
 			A2(
 				_elm_lang$core$List$filter,
 				F2(
@@ -12672,7 +12672,16 @@ var _user$project$Main$score = F3(
 						return _elm_lang$core$Native_Utils.eq(x, y);
 					})(_user$project$Main$EDealMoreNonzero),
 				log));
-		var dealsecs = deals * 60;
+		var gooddealsecs = gooddeals * 45;
+		var baddeals = _elm_lang$core$List$length(
+			A2(
+				_elm_lang$core$List$filter,
+				F2(
+					function (x, y) {
+						return _elm_lang$core$Native_Utils.eq(x, y);
+					})(_user$project$Main$EDealMoreNonzero),
+				log));
+		var baddealsecs = baddeals * 60;
 		var format = function (secs) {
 			var s = A2(_elm_lang$core$Basics_ops['%'], secs, 60);
 			var m = (secs / 60) | 0;
@@ -12690,7 +12699,7 @@ var _user$project$Main$score = F3(
 		};
 		var secs = _elm_lang$core$Basics$round(
 			_elm_lang$core$Time$inSeconds(end - start));
-		var totalsecs = secs + dealsecs;
+		var totalsecs = (secs + baddealsecs) - gooddealsecs;
 		return {
 			ctor: '_Tuple2',
 			_0: totalsecs,
@@ -12714,8 +12723,16 @@ var _user$project$Main$score = F3(
 									_0: '+',
 									_1: {
 										ctor: '::',
-										_0: format(dealsecs),
-										_1: {ctor: '[]'}
+										_0: format(baddealsecs),
+										_1: {
+											ctor: '::',
+											_0: '-',
+											_1: {
+												ctor: '::',
+												_0: format(gooddealsecs),
+												_1: {ctor: '[]'}
+											}
+										}
 									}
 								}
 							}
