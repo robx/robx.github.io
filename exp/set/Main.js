@@ -11311,6 +11311,37 @@ var _elm_lang$svg$Svg_Events$onMouseOut = _elm_lang$svg$Svg_Events$simpleOn('mou
 var _elm_lang$svg$Svg_Events$onMouseOver = _elm_lang$svg$Svg_Events$simpleOn('mouseover');
 var _elm_lang$svg$Svg_Events$onMouseUp = _elm_lang$svg$Svg_Events$simpleOn('mouseup');
 
+var _user$project$Card$superset = function (cards) {
+	var _p0 = cards;
+	if (((((_p0.ctor === '::') && (_p0._1.ctor === '::')) && (_p0._1._1.ctor === '::')) && (_p0._1._1._1.ctor === '::')) && (_p0._1._1._1._1.ctor === '[]')) {
+		var _p4 = _p0._1._1._1._0;
+		var _p3 = _p0._1._1._0;
+		var _p2 = _p0._1._0;
+		var _p1 = _p0._0;
+		var miss = F2(
+			function (a, b) {
+				return A2(_elm_lang$core$Basics_ops['%'], (0 - a) - b, 3);
+			});
+		var missingCard = F2(
+			function (a, b) {
+				return {
+					color: A2(miss, a.color, b.color),
+					shape: A2(miss, a.shape, b.shape),
+					count: A2(miss, a.count, b.count),
+					fill: A2(miss, a.fill, b.fill)
+				};
+			});
+		return _elm_lang$core$Native_Utils.eq(
+			A2(missingCard, _p1, _p2),
+			A2(missingCard, _p3, _p4)) || (_elm_lang$core$Native_Utils.eq(
+			A2(missingCard, _p1, _p3),
+			A2(missingCard, _p2, _p4)) || _elm_lang$core$Native_Utils.eq(
+			A2(missingCard, _p1, _p4),
+			A2(missingCard, _p2, _p3)));
+	} else {
+		return false;
+	}
+};
 var _user$project$Card$set = function (cards) {
 	var test = function (prop) {
 		return A3(
@@ -11487,7 +11518,7 @@ var _user$project$D$dA = F4(
 			});
 	});
 
-var _user$project$Game$countSets = function (g) {
+var _user$project$Game$countSupersets = function (g) {
 	var pairs = function (xs) {
 		var _p0 = xs;
 		if (_p0.ctor === '[]') {
@@ -11531,6 +11562,75 @@ var _user$project$Game$countSets = function (g) {
 				triples(_p3));
 		}
 	};
+	var quads = function (xs) {
+		var _p4 = xs;
+		if (_p4.ctor === '[]') {
+			return {ctor: '[]'};
+		} else {
+			var _p5 = _p4._1;
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				A2(
+					_elm_lang$core$List$map,
+					F2(
+						function (x, y) {
+							return {ctor: '::', _0: x, _1: y};
+						})(_p4._0),
+					triples(_p5)),
+				quads(_p5));
+		}
+	};
+	var cards = _elm_lang$core$Dict$values(g.table);
+	return _elm_lang$core$List$length(
+		A2(
+			_elm_lang$core$List$filter,
+			_user$project$Card$superset,
+			quads(cards)));
+};
+var _user$project$Game$countSets = function (g) {
+	var pairs = function (xs) {
+		var _p6 = xs;
+		if (_p6.ctor === '[]') {
+			return {ctor: '[]'};
+		} else {
+			var _p7 = _p6._1;
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				A2(
+					_elm_lang$core$List$map,
+					function (z) {
+						return {
+							ctor: '::',
+							_0: _p6._0,
+							_1: {
+								ctor: '::',
+								_0: z,
+								_1: {ctor: '[]'}
+							}
+						};
+					},
+					_p7),
+				pairs(_p7));
+		}
+	};
+	var triples = function (xs) {
+		var _p8 = xs;
+		if (_p8.ctor === '[]') {
+			return {ctor: '[]'};
+		} else {
+			var _p9 = _p8._1;
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				A2(
+					_elm_lang$core$List$map,
+					F2(
+						function (x, y) {
+							return {ctor: '::', _0: x, _1: y};
+						})(_p8._0),
+					pairs(_p9)),
+				triples(_p9));
+		}
+	};
 	var cards = _elm_lang$core$Dict$values(g.table);
 	return _elm_lang$core$List$length(
 		A2(
@@ -11538,6 +11638,16 @@ var _user$project$Game$countSets = function (g) {
 			_user$project$Card$set,
 			triples(cards)));
 };
+var _user$project$Game$superset = F2(
+	function (g, ps) {
+		var cs = A2(
+			_elm_lang$core$List$filterMap,
+			A2(_elm_lang$core$Basics$flip, _elm_lang$core$Dict$get, g.table),
+			ps);
+		return _elm_lang$core$Native_Utils.eq(
+			_elm_lang$core$List$length(cs),
+			4) && _user$project$Card$superset(cs);
+	});
 var _user$project$Game$set = F2(
 	function (g, ps) {
 		var cs = A2(
@@ -11547,25 +11657,6 @@ var _user$project$Game$set = F2(
 		return _elm_lang$core$Native_Utils.eq(
 			_elm_lang$core$List$length(ps),
 			3) && _user$project$Card$set(cs);
-	});
-var _user$project$Game$take = F2(
-	function (g, ps) {
-		return A2(_user$project$Game$set, g, ps) ? {
-			ctor: '_Tuple2',
-			_0: true,
-			_1: _elm_lang$core$Native_Utils.update(
-				g,
-				{
-					table: A3(
-						_elm_lang$core$List$foldr,
-						F2(
-							function (x, y) {
-								return x(y);
-							}),
-						g.table,
-						A2(_elm_lang$core$List$map, _elm_lang$core$Dict$remove, ps))
-				})
-		} : {ctor: '_Tuple2', _0: false, _1: g};
 	});
 var _user$project$Game$grid = function (cols) {
 	return A2(
@@ -11581,22 +11672,15 @@ var _user$project$Game$grid = function (cols) {
 		A2(_elm_lang$core$List$range, 0, cols - 1));
 };
 var _user$project$Game$standardGrid = _user$project$Game$grid(4);
-var _user$project$Game$gaps = function (g) {
-	return A2(
-		_elm_lang$core$List$filter,
-		function (p) {
-			return !A2(_elm_lang$core$Dict$member, p, g.table);
-		},
-		_user$project$Game$standardGrid);
-};
+var _user$project$Game$superGrid = _user$project$Game$grid(3);
 var _user$project$Game$columns = function (g) {
-	var last = function (_p4) {
+	var last = function (_p10) {
 		return _elm_lang$core$List$head(
-			_elm_lang$core$List$reverse(_p4));
+			_elm_lang$core$List$reverse(_p10));
 	};
-	return function (_p5) {
-		var _p6 = _p5;
-		return _p6._0 + 1;
+	return function (_p11) {
+		var _p12 = _p11;
+		return _p12._0 + 1;
 	}(
 		A2(
 			_elm_lang$core$Maybe$withDefault,
@@ -11616,25 +11700,25 @@ var _user$project$Game$allGaps = function (g) {
 var _user$project$Game$apply = F2(
 	function (action, game) {
 		var move1 = F2(
-			function (_p7, g) {
-				var _p8 = _p7;
+			function (_p13, g) {
+				var _p14 = _p13;
 				var move = F3(
 					function (from, to, dict) {
-						var _p9 = A2(_elm_lang$core$Dict$get, from, dict);
-						if (_p9.ctor === 'Nothing') {
+						var _p15 = A2(_elm_lang$core$Dict$get, from, dict);
+						if (_p15.ctor === 'Nothing') {
 							return dict;
 						} else {
 							return A3(
 								_elm_lang$core$Dict$insert,
 								to,
-								_p9._0,
+								_p15._0,
 								A2(_elm_lang$core$Dict$remove, from, dict));
 						}
 					});
 				return _elm_lang$core$Native_Utils.update(
 					g,
 					{
-						table: A3(move, _p8._0, _p8._1, g.table)
+						table: A3(move, _p14._0, _p14._1, g.table)
 					});
 			});
 		var remove1 = F2(
@@ -11647,20 +11731,20 @@ var _user$project$Game$apply = F2(
 			});
 		var deal1 = F2(
 			function (pos, g) {
-				var _p10 = g.deck;
-				if (_p10.ctor === '::') {
+				var _p16 = g.deck;
+				if (_p16.ctor === '::') {
 					return _elm_lang$core$Native_Utils.update(
 						g,
 						{
-							deck: _p10._1,
-							table: A3(_elm_lang$core$Dict$insert, pos, _p10._0, g.table)
+							deck: _p16._1,
+							table: A3(_elm_lang$core$Dict$insert, pos, _p16._0, g.table)
 						});
 				} else {
 					return g;
 				}
 			});
-		var _p11 = action;
-		switch (_p11.ctor) {
+		var _p17 = action;
+		switch (_p17.ctor) {
 			case 'Deal':
 				return A3(
 					_elm_lang$core$List$foldr,
@@ -11669,7 +11753,7 @@ var _user$project$Game$apply = F2(
 							return x(y);
 						}),
 					game,
-					A2(_elm_lang$core$List$map, deal1, _p11._0));
+					A2(_elm_lang$core$List$map, deal1, _p17._0));
 			case 'Set':
 				return A3(
 					_elm_lang$core$List$foldr,
@@ -11678,7 +11762,7 @@ var _user$project$Game$apply = F2(
 							return x(y);
 						}),
 					game,
-					A2(_elm_lang$core$List$map, remove1, _p11._0));
+					A2(_elm_lang$core$List$map, remove1, _p17._0));
 			default:
 				return A3(
 					_elm_lang$core$List$foldr,
@@ -11687,18 +11771,18 @@ var _user$project$Game$apply = F2(
 							return x(y);
 						}),
 					game,
-					A2(_elm_lang$core$List$map, move1, _p11._0));
+					A2(_elm_lang$core$List$map, move1, _p17._0));
 		}
 	});
 var _user$project$Game$compactMoves = function (g) {
-	var f = function (_p12) {
-		var _p13 = _p12;
-		var _p15 = _p13._1;
-		var _p14 = _p13._0;
-		return ((_elm_lang$core$Native_Utils.cmp(_p14, _p15) < 0) && (_elm_lang$core$Native_Utils.cmp(
-			_p15,
+	var f = function (_p18) {
+		var _p19 = _p18;
+		var _p21 = _p19._1;
+		var _p20 = _p19._0;
+		return ((_elm_lang$core$Native_Utils.cmp(_p20, _p21) < 0) && (_elm_lang$core$Native_Utils.cmp(
+			_p21,
 			{ctor: '_Tuple2', _0: 3, _1: 2}) > 0)) ? _elm_lang$core$Maybe$Just(
-			{ctor: '_Tuple2', _0: _p15, _1: _p14}) : _elm_lang$core$Maybe$Nothing;
+			{ctor: '_Tuple2', _0: _p21, _1: _p20}) : _elm_lang$core$Maybe$Nothing;
 	};
 	return A2(
 		_elm_lang$core$List$filterMap,
@@ -11718,10 +11802,6 @@ var _user$project$Game$over = function (g) {
 		_user$project$Game$countSets(g),
 		0);
 };
-var _user$project$Game$none = {
-	deck: {ctor: '[]'},
-	table: _elm_lang$core$Dict$empty
-};
 var _user$project$Game$deck = A2(
 	_elm_lang$core$List$map,
 	_user$project$Card$fromInt,
@@ -11734,10 +11814,43 @@ var _user$project$Game$posEmpty = F2(
 var _user$project$Game$deckEmpty = function (g) {
 	return _elm_lang$core$List$isEmpty(g.deck);
 };
-var _user$project$Game$Game = F2(
-	function (a, b) {
-		return {deck: a, table: b};
+var _user$project$Game$Game = F3(
+	function (a, b, c) {
+		return {deck: a, table: b, type_: c};
 	});
+var _user$project$Game$SuperSet = {ctor: 'SuperSet'};
+var _user$project$Game$take = F2(
+	function (g, ps) {
+		var s = _elm_lang$core$Native_Utils.eq(g.type_, _user$project$Game$SuperSet) ? A2(_user$project$Game$superset, g, ps) : A2(_user$project$Game$set, g, ps);
+		return s ? {
+			ctor: '_Tuple2',
+			_0: true,
+			_1: _elm_lang$core$Native_Utils.update(
+				g,
+				{
+					table: A3(
+						_elm_lang$core$List$foldr,
+						F2(
+							function (x, y) {
+								return x(y);
+							}),
+						g.table,
+						A2(_elm_lang$core$List$map, _elm_lang$core$Dict$remove, ps))
+				})
+		} : {ctor: '_Tuple2', _0: false, _1: g};
+	});
+var _user$project$Game$ClassicSet = {ctor: 'ClassicSet'};
+var _user$project$Game$setSize = function (g) {
+	return _elm_lang$core$Native_Utils.eq(g.type_, _user$project$Game$ClassicSet) ? 3 : 4;
+};
+var _user$project$Game$gaps = function (g) {
+	return A2(
+		_elm_lang$core$List$filter,
+		function (p) {
+			return !A2(_elm_lang$core$Dict$member, p, g.table);
+		},
+		_elm_lang$core$Native_Utils.eq(g.type_, _user$project$Game$ClassicSet) ? _user$project$Game$standardGrid : _user$project$Game$superGrid);
+};
 var _user$project$Game$Move = function (a) {
 	return {ctor: 'Move', _0: a};
 };
@@ -11775,27 +11888,27 @@ var _user$project$Game$deal = function (g) {
 		_user$project$Game$dealAction(g),
 		g);
 };
-var _user$project$Game$init = A2(
-	_elm_lang$core$Random$map,
-	_user$project$Game$deal,
-	A2(
-		_elm_lang$core$Random$map,
-		function (d) {
-			return {deck: d, table: _elm_lang$core$Dict$empty};
-		},
-		_user$project$Game$shuffled));
-var _user$project$Game$initShort = A2(
-	_elm_lang$core$Random$map,
-	_user$project$Game$deal,
-	A2(
-		_elm_lang$core$Random$map,
-		function (d) {
-			return {deck: d, table: _elm_lang$core$Dict$empty};
-		},
-		A2(
+var _user$project$Game$init = F2(
+	function ($short, $super) {
+		return A2(
 			_elm_lang$core$Random$map,
-			_elm_lang$core$List$drop(60),
-			_user$project$Game$shuffled)));
+			_user$project$Game$deal,
+			A2(
+				_elm_lang$core$Random$map,
+				function (d) {
+					return {
+						deck: d,
+						table: _elm_lang$core$Dict$empty,
+						type_: $super ? _user$project$Game$SuperSet : _user$project$Game$ClassicSet
+					};
+				},
+				A2(
+					_elm_lang$core$Random$map,
+					$short ? _elm_lang$core$List$drop(60) : function (x) {
+						return x;
+					},
+					_user$project$Game$shuffled)));
+	});
 var _user$project$Game$dealMoreAction = function () {
 	var col = function (c) {
 		return {
@@ -11812,10 +11925,10 @@ var _user$project$Game$dealMoreAction = function () {
 			}
 		};
 	};
-	return function (_p16) {
+	return function (_p22) {
 		return _user$project$Game$Deal(
 			col(
-				_user$project$Game$columns(_p16)));
+				_user$project$Game$columns(_p22)));
 	};
 }();
 var _user$project$Game$dealMore = function (g) {
@@ -12427,21 +12540,21 @@ var _user$project$SvgSet$cardLayout = {
 	w: 50,
 	h: 80
 };
-var _user$project$SvgSet$squareSet = {
-	colors: {ctor: '_Tuple3', _0: 'rgb(5,135,137)', _1: 'rgb(213,75,26)', _2: 'rgb(227,167,45)'},
-	foreground: 'rgb(80,61,46)',
-	background: 'rgb(246,242,231)',
-	table: 'rgb(240,236,201)',
-	select: 'orange',
-	shapes: {ctor: '_Tuple3', _0: _user$project$SvgSet$square, _1: _user$project$SvgSet$triangle, _2: _user$project$SvgSet$circle}
-};
 var _user$project$SvgSet$mySet = {
-	colors: {ctor: '_Tuple3', _0: 'rgb(5,135,137)', _1: 'rgb(213,75,26)', _2: 'rgb(227,167,45)'},
+	colors: {ctor: '_Tuple3', _0: 'rgb(5,135,137)', _1: 'rgb(213,75,26)', _2: 'rgb(233,167,67)'},
 	foreground: 'rgb(80,61,46)',
 	background: 'rgb(246,242,231)',
 	table: 'rgb(240,236,201)',
 	select: 'orange',
 	shapes: {ctor: '_Tuple3', _0: _user$project$SvgSet$rectangle, _1: _user$project$SvgSet$ellipse, _2: _user$project$SvgSet$lens}
+};
+var _user$project$SvgSet$squareSet = {
+	colors: _user$project$SvgSet$mySet.colors,
+	foreground: 'rgb(80,61,46)',
+	background: 'rgb(246,242,231)',
+	table: 'rgb(240,236,201)',
+	select: 'orange',
+	shapes: {ctor: '_Tuple3', _0: _user$project$SvgSet$square, _1: _user$project$SvgSet$triangle, _2: _user$project$SvgSet$circle}
 };
 var _user$project$SvgSet$standardSet = {
 	colors: {ctor: '_Tuple3', _0: 'rgb(229,46,37)', _1: 'rgb(72,128,52)', _2: 'rgb(116,44,177)'},
@@ -12805,7 +12918,7 @@ var _user$project$Main$updateGame = F2(
 					} else {
 						if (_elm_lang$core$Native_Utils.cmp(
 							_elm_lang$core$List$length(model.selected),
-							2) < 0) {
+							_user$project$Game$setSize(model.game) - 1) < 0) {
 							return {
 								ctor: '_Tuple2',
 								_0: _elm_lang$core$Native_Utils.update(
@@ -12897,8 +13010,8 @@ var _user$project$Main$updateGame = F2(
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 234, column: 5},
-						end: {line: 291, column: 36}
+						start: {line: 232, column: 5},
+						end: {line: 289, column: 36}
 					},
 					_p1)('bad state');
 		}
@@ -13048,22 +13161,10 @@ var _user$project$Main$update = F2(
 					_1: _elm_lang$core$Platform_Cmd$batch(
 						{
 							ctor: '::',
-							_0: A2(_elm_lang$core$Random$generate, _user$project$Main$NewGame, _user$project$Game$init),
-							_1: {
-								ctor: '::',
-								_0: A2(_elm_lang$core$Task$perform, _user$project$Main$StartGame, _elm_lang$core$Time$now),
-								_1: {ctor: '[]'}
-							}
-						})
-				};
-			case 'GoShort':
-				return {
-					ctor: '_Tuple2',
-					_0: model,
-					_1: _elm_lang$core$Platform_Cmd$batch(
-						{
-							ctor: '::',
-							_0: A2(_elm_lang$core$Random$generate, _user$project$Main$NewGame, _user$project$Game$initShort),
+							_0: A2(
+								_elm_lang$core$Random$generate,
+								_user$project$Main$NewGame,
+								A2(_user$project$Game$init, _p12._0, _p12._1)),
 							_1: {
 								ctor: '::',
 								_0: A2(_elm_lang$core$Task$perform, _user$project$Main$StartGame, _elm_lang$core$Time$now),
@@ -13103,15 +13204,17 @@ var _user$project$Main$update = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 206, column: 13},
-							end: {line: 215, column: 44}
+							start: {line: 204, column: 13},
+							end: {line: 213, column: 44}
 						},
 						_p14)('bad state');
 				}
 		}
 	});
-var _user$project$Main$GoShort = {ctor: 'GoShort'};
-var _user$project$Main$Go = {ctor: 'Go'};
+var _user$project$Main$Go = F2(
+	function (a, b) {
+		return {ctor: 'Go', _0: a, _1: b};
+	});
 var _user$project$Main$viewStart = function (msg) {
 	var m = A2(_elm_lang$core$Maybe$withDefault, 'Start a game', msg);
 	return A2(
@@ -13133,7 +13236,8 @@ var _user$project$Main$viewStart = function (msg) {
 					_elm_lang$html$Html$button,
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$Go),
+						_0: _elm_lang$html$Html_Events$onClick(
+							A2(_user$project$Main$Go, false, false)),
 						_1: {ctor: '[]'}
 					},
 					{
@@ -13147,7 +13251,8 @@ var _user$project$Main$viewStart = function (msg) {
 						_elm_lang$html$Html$button,
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$GoShort),
+							_0: _elm_lang$html$Html_Events$onClick(
+								A2(_user$project$Main$Go, true, false)),
 							_1: {ctor: '[]'}
 						},
 						{
@@ -13155,7 +13260,39 @@ var _user$project$Main$viewStart = function (msg) {
 							_0: _elm_lang$html$Html$text('Small deck'),
 							_1: {ctor: '[]'}
 						}),
-					_1: {ctor: '[]'}
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$button,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Events$onClick(
+									A2(_user$project$Main$Go, false, true)),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text('Superset (Full)'),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$button,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Events$onClick(
+										A2(_user$project$Main$Go, true, true)),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('Superset (Small)'),
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
+						}
+					}
 				}
 			}
 		});
