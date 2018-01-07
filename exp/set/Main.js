@@ -11825,131 +11825,134 @@ var _user$project$Game$dealMore = function (g) {
 		g);
 };
 
-var _user$project$SvgSet$letterCard = function (c) {
-	return A2(
-		_elm_lang$svg$Svg$g,
-		{ctor: '[]'},
-		{
+var _user$project$SvgSet$rectAttrs = F2(
+	function (_p0, r) {
+		var _p1 = _p0;
+		var _p3 = _p1._0;
+		var _p2 = _p1._1;
+		return {
 			ctor: '::',
-			_0: A2(
-				_elm_lang$svg$Svg$rect,
-				{
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$x('-25'),
-					_1: {
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$y('-40'),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$width('50'),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$height('80'),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$rx('6'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$ry('6'),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$stroke('none'),
-											_1: {
-												ctor: '::',
-												_0: _elm_lang$svg$Svg_Attributes$fill('lightgray'),
-												_1: {ctor: '[]'}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				},
-				{ctor: '[]'}),
+			_0: _elm_lang$svg$Svg_Attributes$x(
+				_elm_lang$core$Basics$toString((0 - _p3) / 2)),
 			_1: {
 				ctor: '::',
-				_0: A2(
-					_elm_lang$svg$Svg$text_,
-					{
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$stroke('gray'),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$fill('gray'),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$textAnchor('middle'),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$fontSize('50'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$style('dominant-baseline: central;'),
-										_1: {ctor: '[]'}
-									}
-								}
-							}
-						}
-					},
-					{
-						ctor: '::',
-						_0: _elm_lang$svg$Svg$text(c),
-						_1: {ctor: '[]'}
-					}),
-				_1: {ctor: '[]'}
-			}
-		});
-};
-var _user$project$SvgSet$more = _user$project$SvgSet$letterCard('+');
-var _user$project$SvgSet$card = F2(
-	function (st, selected) {
-		return A2(
-			_elm_lang$svg$Svg$rect,
-			{
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$x('-25'),
+				_0: _elm_lang$svg$Svg_Attributes$y(
+					_elm_lang$core$Basics$toString((0 - _p2) / 2)),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$y('-40'),
+					_0: _elm_lang$svg$Svg_Attributes$width(
+						_elm_lang$core$Basics$toString(_p3)),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$width('50'),
+						_0: _elm_lang$svg$Svg_Attributes$height(
+							_elm_lang$core$Basics$toString(_p2)),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$height('80'),
+							_0: _elm_lang$svg$Svg_Attributes$rx(
+								_elm_lang$core$Basics$toString(r)),
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$rx('6'),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$ry('6'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$stroke(
-											selected ? st.select : st.foreground),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$strokeWidth(
-												selected ? '1' : '0.2'),
-											_1: {
-												ctor: '::',
-												_0: _elm_lang$svg$Svg_Attributes$fill(st.background),
-												_1: {
-													ctor: '::',
-													_0: _elm_lang$svg$Svg_Attributes$style('filter: url(#dropshadow);'),
-													_1: {ctor: '[]'}
-												}
-											}
-										}
-									}
-								}
+								_0: _elm_lang$svg$Svg_Attributes$ry(
+									_elm_lang$core$Basics$toString(r)),
+								_1: {ctor: '[]'}
 							}
 						}
 					}
 				}
-			},
+			}
+		};
+	});
+var _user$project$SvgSet$card = F4(
+	function (_p4, r, st, selected) {
+		var _p5 = _p4;
+		return A2(
+			_elm_lang$svg$Svg$rect,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				A2(
+					_user$project$SvgSet$rectAttrs,
+					{ctor: '_Tuple2', _0: _p5._0, _1: _p5._1},
+					r),
+				{
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$stroke(
+						selected ? st.select : st.foreground),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$strokeWidth(
+							selected ? '1' : '0.2'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$fill(st.background),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$style('filter: url(#dropshadow);'),
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				}),
 			{ctor: '[]'});
+	});
+var _user$project$SvgSet$letterCard = F3(
+	function (_p6, r, c) {
+		var _p7 = _p6;
+		return A2(
+			_elm_lang$svg$Svg$g,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$svg$Svg$rect,
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						A2(
+							_user$project$SvgSet$rectAttrs,
+							{ctor: '_Tuple2', _0: _p7._0, _1: _p7._1},
+							r),
+						{
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$stroke('none'),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$fill('lightgray'),
+								_1: {ctor: '[]'}
+							}
+						}),
+					{ctor: '[]'}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$svg$Svg$text_,
+						{
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$stroke('gray'),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$fill('gray'),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$svg$Svg_Attributes$textAnchor('middle'),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$svg$Svg_Attributes$fontSize('50'),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$svg$Svg_Attributes$style('dominant-baseline: central;'),
+											_1: {ctor: '[]'}
+										}
+									}
+								}
+							}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$svg$Svg$text(c),
+							_1: {ctor: '[]'}
+						}),
+					_1: {ctor: '[]'}
+				}
+			});
 	});
 var _user$project$SvgSet$dropShadow = A2(
 	_elm_lang$svg$Svg$filter,
@@ -12280,6 +12283,158 @@ var _user$project$SvgSet$rectangle = A2(
 		}
 	},
 	{ctor: '[]'});
+var _user$project$SvgSet$triangle = A2(
+	_elm_lang$svg$Svg$polygon,
+	{
+		ctor: '::',
+		_0: _elm_lang$svg$Svg_Attributes$points('5.2,-3 0,6 -5.2,-3'),
+		_1: {ctor: '[]'}
+	},
+	{ctor: '[]'});
+var _user$project$SvgSet$circle = A2(
+	_elm_lang$svg$Svg$ellipse,
+	{
+		ctor: '::',
+		_0: _elm_lang$svg$Svg_Attributes$cx('0'),
+		_1: {
+			ctor: '::',
+			_0: _elm_lang$svg$Svg_Attributes$cy('0'),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$rx('6'),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$ry('6'),
+					_1: {ctor: '[]'}
+				}
+			}
+		}
+	},
+	{ctor: '[]'});
+var _user$project$SvgSet$square = A2(
+	_elm_lang$svg$Svg$rect,
+	{
+		ctor: '::',
+		_0: _elm_lang$svg$Svg_Attributes$x('-6'),
+		_1: {
+			ctor: '::',
+			_0: _elm_lang$svg$Svg_Attributes$y('-6'),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$width('12'),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$height('12'),
+					_1: {ctor: '[]'}
+				}
+			}
+		}
+	},
+	{ctor: '[]'});
+var _user$project$SvgSet$rectLocations = function (count) {
+	var _p8 = count;
+	switch (_p8) {
+		case 0:
+			return {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 0, _1: 0},
+				_1: {ctor: '[]'}
+			};
+		case 1:
+			return {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 0, _1: 10},
+				_1: {
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: 0, _1: -10},
+					_1: {ctor: '[]'}
+				}
+			};
+		default:
+			return {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 0, _1: 20},
+				_1: {
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: 0, _1: 0},
+					_1: {
+						ctor: '::',
+						_0: {ctor: '_Tuple2', _0: 0, _1: -20},
+						_1: {ctor: '[]'}
+					}
+				}
+			};
+	}
+};
+var _user$project$SvgSet$squareLocations = function (count) {
+	var _p9 = count;
+	switch (_p9) {
+		case 0:
+			return {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 0, _1: 0},
+				_1: {ctor: '[]'}
+			};
+		case 1:
+			return {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 0, _1: 10},
+				_1: {
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: 0, _1: -10},
+					_1: {ctor: '[]'}
+				}
+			};
+		default:
+			return {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 10.4, _1: -12},
+				_1: {
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: 0, _1: 12},
+					_1: {
+						ctor: '::',
+						_0: {ctor: '_Tuple2', _0: -10.4, _1: -12},
+						_1: {ctor: '[]'}
+					}
+				}
+			};
+	}
+};
+var _user$project$SvgSet$squareLayout = {
+	locations: _user$project$SvgSet$squareLocations,
+	card: A2(
+		_user$project$SvgSet$card,
+		{ctor: '_Tuple2', _0: 50, _1: 50},
+		6),
+	button: A2(
+		_user$project$SvgSet$letterCard,
+		{ctor: '_Tuple2', _0: 50, _1: 50},
+		6),
+	w: 50,
+	h: 50
+};
+var _user$project$SvgSet$cardLayout = {
+	locations: _user$project$SvgSet$rectLocations,
+	card: A2(
+		_user$project$SvgSet$card,
+		{ctor: '_Tuple2', _0: 50, _1: 80},
+		6),
+	button: A2(
+		_user$project$SvgSet$letterCard,
+		{ctor: '_Tuple2', _0: 50, _1: 80},
+		6),
+	w: 50,
+	h: 80
+};
+var _user$project$SvgSet$squareSet = {
+	colors: {ctor: '_Tuple3', _0: 'rgb(5,135,137)', _1: 'rgb(213,75,26)', _2: 'rgb(227,167,45)'},
+	foreground: 'rgb(80,61,46)',
+	background: 'rgb(246,242,231)',
+	table: 'rgb(240,236,201)',
+	select: 'orange',
+	shapes: {ctor: '_Tuple3', _0: _user$project$SvgSet$square, _1: _user$project$SvgSet$triangle, _2: _user$project$SvgSet$circle}
+};
 var _user$project$SvgSet$mySet = {
 	colors: {ctor: '_Tuple3', _0: 'rgb(5,135,137)', _1: 'rgb(213,75,26)', _2: 'rgb(227,167,45)'},
 	foreground: 'rgb(80,61,46)',
@@ -12297,69 +12452,41 @@ var _user$project$SvgSet$standardSet = {
 	shapes: {ctor: '_Tuple3', _0: _user$project$SvgSet$diamond, _1: _user$project$SvgSet$oval, _2: _user$project$SvgSet$squiggle}
 };
 var _user$project$SvgSet$lookup = F2(
-	function (_p0, p) {
-		var _p1 = _p0;
-		var _p2 = p;
-		switch (_p2) {
+	function (_p10, p) {
+		var _p11 = _p10;
+		var _p12 = p;
+		switch (_p12) {
 			case 0:
-				return _p1._0;
+				return _p11._0;
 			case 1:
-				return _p1._1;
+				return _p11._1;
 			default:
-				return _p1._2;
+				return _p11._2;
 		}
 	});
-var _user$project$SvgSet$draw = F3(
-	function (st, selected, c) {
-		var trans = function (y) {
+var _user$project$SvgSet$draw = F4(
+	function (layout, st, selected, c) {
+		var trans = function (_p13) {
+			var _p14 = _p13;
 			return A2(
 				_elm_lang$core$Basics_ops['++'],
-				'translate(0,',
+				'translate(',
 				A2(
 					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(y),
-					')'));
+					_elm_lang$core$Basics$toString(_p14._0),
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						',',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							_elm_lang$core$Basics$toString(_p14._1),
+							')'))));
 		};
-		var locs = function () {
-			var _p3 = c.count;
-			switch (_p3) {
-				case 0:
-					return {
-						ctor: '::',
-						_0: 0,
-						_1: {ctor: '[]'}
-					};
-				case 1:
-					return {
-						ctor: '::',
-						_0: 10,
-						_1: {
-							ctor: '::',
-							_0: -10,
-							_1: {ctor: '[]'}
-						}
-					};
-				default:
-					return {
-						ctor: '::',
-						_0: 20,
-						_1: {
-							ctor: '::',
-							_0: 0,
-							_1: {
-								ctor: '::',
-								_0: -20,
-								_1: {ctor: '[]'}
-							}
-						}
-					};
-			}
-		}();
 		var elt = A2(_user$project$SvgSet$lookup, st.shapes, c.shape);
 		var col = A2(_user$project$SvgSet$lookup, st.colors, c.color);
 		var f = function () {
-			var _p4 = c.fill;
-			switch (_p4) {
+			var _p15 = c.fill;
+			switch (_p15) {
 				case 0:
 					return col;
 				case 1:
@@ -12369,8 +12496,8 @@ var _user$project$SvgSet$draw = F3(
 			}
 		}();
 		var shade = function () {
-			var _p5 = c.fill;
-			if (_p5 === 1) {
+			var _p16 = c.fill;
+			if (_p16 === 1) {
 				return {
 					ctor: '::',
 					_0: A2(
@@ -12379,8 +12506,8 @@ var _user$project$SvgSet$draw = F3(
 							ctor: '::',
 							_0: _elm_lang$svg$Svg_Attributes$clipPath(
 								function () {
-									var _p6 = c.shape;
-									switch (_p6) {
+									var _p17 = c.shape;
+									switch (_p17) {
 										case 0:
 											return 'url(#clip0)';
 										case 1:
@@ -12410,13 +12537,13 @@ var _user$project$SvgSet$draw = F3(
 				return {ctor: '[]'};
 			}
 		}();
-		var sym = function (y) {
+		var sym = function (p) {
 			return A2(
 				_elm_lang$svg$Svg$g,
 				{
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Attributes$transform(
-						trans(y)),
+						trans(p)),
 					_1: {ctor: '[]'}
 				},
 				A2(
@@ -12450,10 +12577,13 @@ var _user$project$SvgSet$draw = F3(
 				_elm_lang$core$Basics_ops['++'],
 				{
 					ctor: '::',
-					_0: A2(_user$project$SvgSet$card, st, selected),
+					_0: A2(layout.card, st, selected),
 					_1: {ctor: '[]'}
 				},
-				A2(_elm_lang$core$List$map, sym, locs)));
+				A2(
+					_elm_lang$core$List$map,
+					sym,
+					layout.locations(c.count))));
 	});
 var _user$project$SvgSet$clipPaths = function (st) {
 	var cp = function (d) {
@@ -12505,8 +12635,13 @@ var _user$project$SvgSet$Style = F6(
 	function (a, b, c, d, e, f) {
 		return {colors: a, foreground: b, background: c, table: d, select: e, shapes: f};
 	});
+var _user$project$SvgSet$Layout = F5(
+	function (a, b, c, d, e) {
+		return {locations: a, card: b, button: c, w: d, h: e};
+	});
 
-var _user$project$Main$style = _user$project$SvgSet$mySet;
+var _user$project$Main$layout = _user$project$SvgSet$squareLayout;
+var _user$project$Main$style = _user$project$SvgSet$squareSet;
 var _user$project$Main$initGame = function (game) {
 	return {
 		game: game,
@@ -12745,8 +12880,8 @@ var _user$project$Main$updateGame = F2(
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 230, column: 5},
-						end: {line: 287, column: 36}
+						start: {line: 234, column: 5},
+						end: {line: 291, column: 36}
 					},
 					_p1)('bad state');
 		}
@@ -12755,25 +12890,10 @@ var _user$project$Main$Choose = function (a) {
 	return {ctor: 'Choose', _0: a};
 };
 var _user$project$Main$viewGame = function (model) {
-	var cols = _user$project$Game$columns(model.game);
-	var viewBox = function () {
-		var height = (80 + 10) * 3;
-		var width = (50 + 10) * (cols + 1);
-		return A2(
-			_elm_lang$core$Basics_ops['++'],
-			'0 0 ',
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				_elm_lang$core$Basics$toString(width),
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					' ',
-					_elm_lang$core$Basics$toString(height))));
-	}();
 	var trans = function (_p6) {
 		var _p7 = _p6;
-		var y = 45 + (90 * _p7._1);
-		var x = 30 + (60 * _p7._0);
+		var y = (_elm_lang$core$Basics$toFloat(_p7._1) + 0.5) * (10 + _user$project$Main$layout.h);
+		var x = (_elm_lang$core$Basics$toFloat(_p7._0) + 0.5) * (10 + _user$project$Main$layout.w);
 		return A2(
 			_elm_lang$core$Basics_ops['++'],
 			'translate(',
@@ -12788,6 +12908,7 @@ var _user$project$Main$viewGame = function (model) {
 						_elm_lang$core$Basics$toString(y),
 						')'))));
 	};
+	var cols = _user$project$Game$columns(model.game);
 	var more = function () {
 		var disabled = model.dealing || (!_elm_lang$core$Native_Utils.eq(model.answer, _elm_lang$core$Maybe$Nothing));
 		var handler = disabled ? {ctor: '[]'} : {
@@ -12818,9 +12939,23 @@ var _user$project$Main$viewGame = function (model) {
 			},
 			{
 				ctor: '::',
-				_0: _user$project$SvgSet$letterCard(text),
+				_0: _user$project$Main$layout.button(text),
 				_1: {ctor: '[]'}
 			});
+	}();
+	var viewBox = function () {
+		var height = (_user$project$Main$layout.h + 10) * 3;
+		var width = (_user$project$Main$layout.w + 10) * (_elm_lang$core$Basics$toFloat(cols) + 1);
+		return A2(
+			_elm_lang$core$Basics_ops['++'],
+			'0 0 ',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(width),
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					' ',
+					_elm_lang$core$Basics$toString(height))));
 	}();
 	var d = function (_p9) {
 		var _p10 = _p9;
@@ -12844,8 +12979,9 @@ var _user$project$Main$viewGame = function (model) {
 			},
 			{
 				ctor: '::',
-				_0: A3(
+				_0: A4(
 					_user$project$SvgSet$draw,
+					_user$project$Main$layout,
 					_user$project$Main$style,
 					A2(_elm_lang$core$List$member, _p11, model.selected),
 					_p10._1),
@@ -12950,8 +13086,8 @@ var _user$project$Main$update = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 202, column: 13},
-							end: {line: 211, column: 44}
+							start: {line: 206, column: 13},
+							end: {line: 215, column: 44}
 						},
 						_p14)('bad state');
 				}
