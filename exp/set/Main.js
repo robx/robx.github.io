@@ -11797,11 +11797,6 @@ var _user$project$Game$compactMoves = function (g) {
 			_elm_lang$core$List$reverse(
 				_elm_lang$core$Dict$keys(g.table))));
 };
-var _user$project$Game$over = function (g) {
-	return _elm_lang$core$List$isEmpty(g.deck) && _elm_lang$core$Native_Utils.eq(
-		_user$project$Game$countSets(g),
-		0);
-};
 var _user$project$Game$deck = A2(
 	_elm_lang$core$List$map,
 	_user$project$Card$fromInt,
@@ -11839,6 +11834,14 @@ var _user$project$Game$take = F2(
 				})
 		} : {ctor: '_Tuple2', _0: false, _1: g};
 	});
+var _user$project$Game$count = function (g) {
+	return _elm_lang$core$Native_Utils.eq(g.type_, _user$project$Game$SuperSet) ? _user$project$Game$countSupersets(g) : _user$project$Game$countSets(g);
+};
+var _user$project$Game$over = function (g) {
+	return _elm_lang$core$List$isEmpty(g.deck) && _elm_lang$core$Native_Utils.eq(
+		_user$project$Game$count(g),
+		0);
+};
 var _user$project$Game$ClassicSet = {ctor: 'ClassicSet'};
 var _user$project$Game$setSize = function (g) {
 	return _elm_lang$core$Native_Utils.eq(g.type_, _user$project$Game$ClassicSet) ? 3 : 4;
@@ -12976,7 +12979,7 @@ var _user$project$Main$updateGame = F2(
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'DealMore':
-				var nsets = _user$project$Game$countSets(model.game);
+				var nsets = _user$project$Game$count(model.game);
 				var over = _user$project$Game$over(model.game);
 				return over ? {
 					ctor: '_Tuple2',
@@ -13001,7 +13004,7 @@ var _user$project$Main$updateGame = F2(
 						model,
 						{
 							answer: _elm_lang$core$Maybe$Just(
-								_user$project$Game$countSets(model.game)),
+								_user$project$Game$count(model.game)),
 							log: {ctor: '::', _0: _user$project$Main$EDealMoreNonzero, _1: model.log}
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
