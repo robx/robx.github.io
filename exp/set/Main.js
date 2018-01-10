@@ -14008,20 +14008,15 @@ var _user$project$SvgSet$Layout = F5(
 	});
 
 var _user$project$Main$toStyle = function (t) {
-	return A2(
-		_elm_lang$core$Debug$log,
-		_elm_lang$core$Basics$toString(t),
-		function () {
-			var _p0 = t;
-			switch (_p0.ctor) {
-				case 'Square':
-					return {style: _user$project$SvgSet$squareSet, layout: _user$project$SvgSet$squareLayout};
-				case 'Classic':
-					return {style: _user$project$SvgSet$standardSet, layout: _user$project$SvgSet$cardLayout};
-				default:
-					return {style: _user$project$SvgSet$mySet, layout: _user$project$SvgSet$cardLayout};
-			}
-		}());
+	var _p0 = t;
+	switch (_p0.ctor) {
+		case 'Square':
+			return {style: _user$project$SvgSet$squareSet, layout: _user$project$SvgSet$squareLayout};
+		case 'Classic':
+			return {style: _user$project$SvgSet$standardSet, layout: _user$project$SvgSet$cardLayout};
+		default:
+			return {style: _user$project$SvgSet$mySet, layout: _user$project$SvgSet$cardLayout};
+	}
 };
 var _user$project$Main$initGame = function (game) {
 	return {
