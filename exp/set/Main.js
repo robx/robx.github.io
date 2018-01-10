@@ -11673,52 +11673,28 @@ var _user$project$Game$grid = function (cols) {
 };
 var _user$project$Game$standardGrid = _user$project$Game$grid(4);
 var _user$project$Game$superGrid = _user$project$Game$grid(3);
-var _user$project$Game$columns = function (g) {
-	var last = function (_p10) {
-		return _elm_lang$core$List$head(
-			_elm_lang$core$List$reverse(_p10));
-	};
-	return function (_p11) {
-		var _p12 = _p11;
-		return _p12._0 + 1;
-	}(
-		A2(
-			_elm_lang$core$Maybe$withDefault,
-			{ctor: '_Tuple2', _0: -1, _1: -1},
-			last(
-				_elm_lang$core$Dict$keys(g.table))));
-};
-var _user$project$Game$allGaps = function (g) {
-	return A2(
-		_elm_lang$core$List$filter,
-		function (p) {
-			return !A2(_elm_lang$core$Dict$member, p, g.table);
-		},
-		_user$project$Game$grid(
-			_user$project$Game$columns(g)));
-};
 var _user$project$Game$apply = F2(
 	function (action, game) {
 		var move1 = F2(
-			function (_p13, g) {
-				var _p14 = _p13;
+			function (_p10, g) {
+				var _p11 = _p10;
 				var move = F3(
 					function (from, to, dict) {
-						var _p15 = A2(_elm_lang$core$Dict$get, from, dict);
-						if (_p15.ctor === 'Nothing') {
+						var _p12 = A2(_elm_lang$core$Dict$get, from, dict);
+						if (_p12.ctor === 'Nothing') {
 							return dict;
 						} else {
 							return A3(
 								_elm_lang$core$Dict$insert,
 								to,
-								_p15._0,
+								_p12._0,
 								A2(_elm_lang$core$Dict$remove, from, dict));
 						}
 					});
 				return _elm_lang$core$Native_Utils.update(
 					g,
 					{
-						table: A3(move, _p14._0, _p14._1, g.table)
+						table: A3(move, _p11._0, _p11._1, g.table)
 					});
 			});
 		var remove1 = F2(
@@ -11731,20 +11707,20 @@ var _user$project$Game$apply = F2(
 			});
 		var deal1 = F2(
 			function (pos, g) {
-				var _p16 = g.deck;
-				if (_p16.ctor === '::') {
+				var _p13 = g.deck;
+				if (_p13.ctor === '::') {
 					return _elm_lang$core$Native_Utils.update(
 						g,
 						{
-							deck: _p16._1,
-							table: A3(_elm_lang$core$Dict$insert, pos, _p16._0, g.table)
+							deck: _p13._1,
+							table: A3(_elm_lang$core$Dict$insert, pos, _p13._0, g.table)
 						});
 				} else {
 					return g;
 				}
 			});
-		var _p17 = action;
-		switch (_p17.ctor) {
+		var _p14 = action;
+		switch (_p14.ctor) {
 			case 'Deal':
 				return A3(
 					_elm_lang$core$List$foldr,
@@ -11753,7 +11729,7 @@ var _user$project$Game$apply = F2(
 							return x(y);
 						}),
 					game,
-					A2(_elm_lang$core$List$map, deal1, _p17._0));
+					A2(_elm_lang$core$List$map, deal1, _p14._0));
 			case 'Set':
 				return A3(
 					_elm_lang$core$List$foldr,
@@ -11762,7 +11738,7 @@ var _user$project$Game$apply = F2(
 							return x(y);
 						}),
 					game,
-					A2(_elm_lang$core$List$map, remove1, _p17._0));
+					A2(_elm_lang$core$List$map, remove1, _p14._0));
 			default:
 				return A3(
 					_elm_lang$core$List$foldr,
@@ -11771,32 +11747,9 @@ var _user$project$Game$apply = F2(
 							return x(y);
 						}),
 					game,
-					A2(_elm_lang$core$List$map, move1, _p17._0));
+					A2(_elm_lang$core$List$map, move1, _p14._0));
 		}
 	});
-var _user$project$Game$compactMoves = function (g) {
-	var f = function (_p18) {
-		var _p19 = _p18;
-		var _p21 = _p19._1;
-		var _p20 = _p19._0;
-		return ((_elm_lang$core$Native_Utils.cmp(_p20, _p21) < 0) && (_elm_lang$core$Native_Utils.cmp(
-			_p21,
-			{ctor: '_Tuple2', _0: 3, _1: 2}) > 0)) ? _elm_lang$core$Maybe$Just(
-			{ctor: '_Tuple2', _0: _p21, _1: _p20}) : _elm_lang$core$Maybe$Nothing;
-	};
-	return A2(
-		_elm_lang$core$List$filterMap,
-		f,
-		A3(
-			_elm_lang$core$List$map2,
-			F2(
-				function (v0, v1) {
-					return {ctor: '_Tuple2', _0: v0, _1: v1};
-				}),
-			_user$project$Game$allGaps(g),
-			_elm_lang$core$List$reverse(
-				_elm_lang$core$Dict$keys(g.table))));
-};
 var _user$project$Game$deck = A2(
 	_elm_lang$core$List$map,
 	_user$project$Card$fromInt,
@@ -11845,6 +11798,60 @@ var _user$project$Game$over = function (g) {
 var _user$project$Game$ClassicSet = {ctor: 'ClassicSet'};
 var _user$project$Game$setSize = function (g) {
 	return _elm_lang$core$Native_Utils.eq(g.type_, _user$project$Game$ClassicSet) ? 3 : 4;
+};
+var _user$project$Game$defaultColumns = function (g) {
+	return _elm_lang$core$Native_Utils.eq(g.type_, _user$project$Game$ClassicSet) ? 4 : 3;
+};
+var _user$project$Game$columns = function (g) {
+	var last = function (_p15) {
+		return _elm_lang$core$List$head(
+			_elm_lang$core$List$reverse(_p15));
+	};
+	var maxcol = function (_p16) {
+		var _p17 = _p16;
+		return _p17._0 + 1;
+	}(
+		A2(
+			_elm_lang$core$Maybe$withDefault,
+			{ctor: '_Tuple2', _0: -1, _1: -1},
+			last(
+				_elm_lang$core$Dict$keys(g.table))));
+	return A2(
+		_elm_lang$core$Basics$max,
+		maxcol,
+		_user$project$Game$defaultColumns(g));
+};
+var _user$project$Game$allGaps = function (g) {
+	return A2(
+		_elm_lang$core$List$filter,
+		function (p) {
+			return !A2(_elm_lang$core$Dict$member, p, g.table);
+		},
+		_user$project$Game$grid(
+			_user$project$Game$columns(g)));
+};
+var _user$project$Game$compactMoves = function (g) {
+	var f = function (_p18) {
+		var _p19 = _p18;
+		var _p21 = _p19._1;
+		var _p20 = _p19._0;
+		return ((_elm_lang$core$Native_Utils.cmp(_p20, _p21) < 0) && (_elm_lang$core$Native_Utils.cmp(
+			_p21,
+			{ctor: '_Tuple2', _0: 3, _1: 2}) > 0)) ? _elm_lang$core$Maybe$Just(
+			{ctor: '_Tuple2', _0: _p21, _1: _p20}) : _elm_lang$core$Maybe$Nothing;
+	};
+	return A2(
+		_elm_lang$core$List$filterMap,
+		f,
+		A3(
+			_elm_lang$core$List$map2,
+			F2(
+				function (v0, v1) {
+					return {ctor: '_Tuple2', _0: v0, _1: v1};
+				}),
+			_user$project$Game$allGaps(g),
+			_elm_lang$core$List$reverse(
+				_elm_lang$core$Dict$keys(g.table))));
 };
 var _user$project$Game$gaps = function (g) {
 	return A2(
@@ -12046,19 +12053,7 @@ var _user$project$SvgSet$letterCard = F3(
 							_1: {
 								ctor: '::',
 								_0: _elm_lang$svg$Svg_Attributes$fill('gray'),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$textAnchor('middle'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$fontSize('50'),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$style('dominant-baseline: central;'),
-											_1: {ctor: '[]'}
-										}
-									}
-								}
+								_1: {ctor: '[]'}
 							}
 						},
 						{
@@ -12617,7 +12612,7 @@ var _user$project$SvgSet$cardLayout = {
 	h: 80
 };
 var _user$project$SvgSet$mySet = {
-	colors: {ctor: '_Tuple3', _0: 'rgb(5,135,137)', _1: 'rgb(213,75,26)', _2: 'rgb(233,167,67)'},
+	colors: {ctor: '_Tuple3', _0: 'rgb(5,135,137)', _1: 'rgb(200,64,34)', _2: 'rgb(233,167,67)'},
 	foreground: 'rgb(80,61,46)',
 	background: 'rgb(246,242,231)',
 	table: 'rgb(240,236,201)',
@@ -12628,7 +12623,7 @@ var _user$project$SvgSet$squareSet = {
 	colors: _user$project$SvgSet$mySet.colors,
 	foreground: 'rgb(80,61,46)',
 	background: 'rgb(246,242,231)',
-	table: 'rgb(240,236,201)',
+	table: 'slategray',
 	select: 'orange',
 	shapes: {ctor: '_Tuple3', _0: _user$project$SvgSet$square, _1: _user$project$SvgSet$triangle, _2: _user$project$SvgSet$circle}
 };
@@ -13069,8 +13064,8 @@ var _user$project$Main$updateGame = F2(
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 232, column: 5},
-						end: {line: 289, column: 36}
+						start: {line: 240, column: 5},
+						end: {line: 297, column: 36}
 					},
 					_p1)('bad state');
 		}
@@ -13188,13 +13183,17 @@ var _user$project$Main$viewGame = function (model) {
 			_0: _elm_lang$svg$Svg_Attributes$viewBox(viewBox),
 			_1: {
 				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$style(
-					{
-						ctor: '::',
-						_0: {ctor: '_Tuple2', _0: 'background', _1: _user$project$Main$style.table},
-						_1: {ctor: '[]'}
-					}),
-				_1: {ctor: '[]'}
+				_0: _elm_lang$html$Html_Attributes$id('main'),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$style(
+						{
+							ctor: '::',
+							_0: {ctor: '_Tuple2', _0: 'background', _1: _user$project$Main$style.table},
+							_1: {ctor: '[]'}
+						}),
+					_1: {ctor: '[]'}
+				}
 			}
 		},
 		{
@@ -13263,8 +13262,8 @@ var _user$project$Main$update = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 204, column: 13},
-							end: {line: 213, column: 44}
+							start: {line: 212, column: 13},
+							end: {line: 221, column: 44}
 						},
 						_p14)('bad state');
 				}
@@ -13275,101 +13274,203 @@ var _user$project$Main$Go = F2(
 		return {ctor: 'Go', _0: a, _1: b};
 	});
 var _user$project$Main$viewStart = function (msg) {
-	var m = A2(_elm_lang$core$Maybe$withDefault, 'Start a game', msg);
-	return A2(
-		_elm_lang$html$Html$div,
-		{ctor: '[]'},
-		{
-			ctor: '::',
-			_0: A2(
-				_elm_lang$html$Html$div,
-				{ctor: '[]'},
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html$text(m),
-					_1: {ctor: '[]'}
-				}),
-			_1: {
+	var trd = function (_p17) {
+		var _p18 = _p17;
+		return _p18._2;
+	};
+	var snd = function (_p19) {
+		var _p20 = _p19;
+		return _p20._1;
+	};
+	var fst = function (_p21) {
+		var _p22 = _p21;
+		return _p22._0;
+	};
+	var addScore = function (h) {
+		var _p23 = msg;
+		if (_p23.ctor === 'Just') {
+			return {
 				ctor: '::',
 				_0: A2(
-					_elm_lang$html$Html$button,
+					_elm_lang$html$Html$div,
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html_Events$onClick(
-							A2(_user$project$Main$Go, false, false)),
-						_1: {ctor: '[]'}
+						_0: _elm_lang$html$Html_Attributes$class('msg'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$style(
+								{
+									ctor: '::',
+									_0: {
+										ctor: '_Tuple2',
+										_0: 'background',
+										_1: snd(_user$project$Main$style.colors)
+									},
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
+						}
 					},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html$text('Full deck'),
+						_0: _elm_lang$html$Html$text(_p23._0),
+						_1: {ctor: '[]'}
+					}),
+				_1: h
+			};
+		} else {
+			return h;
+		}
+	};
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$id('main'),
+			_1: {ctor: '[]'}
+		},
+		addScore(
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$div,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('msg'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$style(
+								{
+									ctor: '::',
+									_0: {
+										ctor: '_Tuple2',
+										_0: 'background',
+										_1: trd(_user$project$Main$style.colors)
+									},
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
+						}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text('Play a game!'),
 						_1: {ctor: '[]'}
 					}),
 				_1: {
 					ctor: '::',
 					_0: A2(
-						_elm_lang$html$Html$button,
+						_elm_lang$html$Html$div,
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html_Events$onClick(
-								A2(_user$project$Main$Go, true, false)),
+							_0: _elm_lang$html$Html_Attributes$class('buttons'),
 							_1: {ctor: '[]'}
 						},
 						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text('Small deck'),
-							_1: {ctor: '[]'}
-						}),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$button,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Events$onClick(
-									A2(_user$project$Main$Go, false, true)),
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text('Superset (Full)'),
-								_1: {ctor: '[]'}
-							}),
-						_1: {
 							ctor: '::',
 							_0: A2(
 								_elm_lang$html$Html$button,
 								{
 									ctor: '::',
 									_0: _elm_lang$html$Html_Events$onClick(
-										A2(_user$project$Main$Go, true, true)),
+										A2(_user$project$Main$Go, false, false)),
 									_1: {ctor: '[]'}
 								},
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html$text('Superset (Small)'),
+									_0: _elm_lang$html$Html$text('Classic'),
 									_1: {ctor: '[]'}
 								}),
-							_1: {ctor: '[]'}
-						}
-					}
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$button,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Events$onClick(
+											A2(_user$project$Main$Go, true, false)),
+										_1: {ctor: '[]'}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text('Classic (short)'),
+										_1: {ctor: '[]'}
+									}),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$button,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Events$onClick(
+												A2(_user$project$Main$Go, false, true)),
+											_1: {ctor: '[]'}
+										},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text('Super'),
+											_1: {ctor: '[]'}
+										}),
+									_1: {
+										ctor: '::',
+										_0: A2(
+											_elm_lang$html$Html$button,
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html_Events$onClick(
+													A2(_user$project$Main$Go, true, true)),
+												_1: {ctor: '[]'}
+											},
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html$text('Super (short)'),
+												_1: {ctor: '[]'}
+											}),
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}),
+					_1: {ctor: '[]'}
 				}
-			}
-		});
+			}));
 };
 var _user$project$Main$view = function (model) {
-	var _p17 = model;
-	if (_p17.ctor === 'Start') {
-		return _user$project$Main$viewStart(_p17._0);
-	} else {
-		return _user$project$Main$viewGame(_p17._0);
-	}
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$id('container'),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$html$Html_Attributes$style(
+					{
+						ctor: '::',
+						_0: {ctor: '_Tuple2', _0: 'background', _1: _user$project$Main$style.table},
+						_1: {ctor: '[]'}
+					}),
+				_1: {ctor: '[]'}
+			}
+		},
+		{
+			ctor: '::',
+			_0: function () {
+				var _p24 = model;
+				if (_p24.ctor === 'Start') {
+					return _user$project$Main$viewStart(_p24._0);
+				} else {
+					return _user$project$Main$viewGame(_p24._0);
+				}
+			}(),
+			_1: {ctor: '[]'}
+		});
 };
 var _user$project$Main$main = _elm_lang$html$Html$program(
 	{
 		init: _user$project$Main$init,
 		view: _user$project$Main$view,
 		update: _user$project$Main$update,
-		subscriptions: function (_p18) {
+		subscriptions: function (_p25) {
 			return _elm_lang$core$Platform_Sub$none;
 		}
 	})();
