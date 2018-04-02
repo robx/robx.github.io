@@ -1,0 +1,30 @@
+<head>
+<title>Puzzl!</title>
+<meta charset="UTF-8">
+<link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500|Roboto+Mono|Roboto+Condensed:400,700&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://code.getmdl.io/1.2.0/material.cyan-light_blue.min.css" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<body>
+<div id="main"></div>
+<div style="text-align: center;">
+  <div style="display: inline-block;" id="draw"></div>
+</div>
+</body>
+<script src="./static/main.js"></script>
+<script src="./static/draw.js"></script>
+<script src="static/elm-pep.js"></script>
+<script>
+Elm.Main.embed(document.getElementById('main'), {
+    "name": "Puzzle 152: Masyu No-Touch",
+    "codeDescription": "Enter the marked rows from left to right. I for cells where the loop goes straight, L for corners, and X for empty cells.",
+    "codeLabel": "20 times ILX",
+    "valid": {"type": "ilx", "length": 20},
+    "code": "da66d8b329189c873279d1874216b8d410ac972c49514009a33e2a93e79fe420",
+});
+Elm.Draw.embed(document.getElementById('draw'), {
+    "width": 400,
+    "height": 400,
+    "image": "masyu-notouch.png"
+});
+</script>
