@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>spam - Solving a word puzzle with Mercury</title>
+        <link rel="stylesheet" href="../css/default.css" />
+    </head>
+    <body>
+        <main role="main">
+            <h1>Solving a word puzzle with Mercury</h1>
+            <article>
+    <section class="header">
+        <time>February 15, 2014</time>
+        
+        
+            <span class="orig">
+                previously published at <a href="http://maybepuzzles.com/2014/02/15/an-excursion-into-logic-programming-solving-a-word-puzzle-with-mercury/">maybepuzzles</a>
+            </span>
+        
+    </section>
+    <section>
+        <p>I recently had the need to check a couple of puzzles that were geared towards intuitive solving, and consequently tricky to prove correct by hand. Luckily enough, Nikolai Beluhov posted an excellent <a href="https://web.archive.org/web/20140215022411/http://nbpuzzles.wordpress.com/2014/02/05/curve-data-solver-and-constructor/">Curve Data solver</a> at just the right moment, allowing me to fix one broken puzzle. For the other, I took the chance to finally play around with <a href="http://en.wikipedia.org/wiki/Logic_programming">logic programming</a>. Prolog is likely the best-known language from this domain, but I went with <a href="http://www.mercurylang.org">Mercury</a>, which is quite close to Prolog, but adds a couple of nice things like a static type system.</p>
+<p>The project was quite successful: It solved the problem and was a lot of fun. Unfortunately, the solver turned out a little too complex to fit into a blog post, largely due to the complexity of the puzzle type. Thus, I decided to break it down to a way simpler (simplistic, even) puzzle, with the option of presenting the full solver in a second post.</p>
+<h3 id="a-word-placement-puzzle">A word placement puzzle</h3>
+<p><strong>Rules</strong> Write the word “PUZZLE” in the grid by placing letters in some empty cells. The word may read in any of the eight horizontal, vertical or diagonal directions.</p>
+<figure>
+<img src="../images/wordplace.png" width="305" alt /><figcaption>The puzzle</figcaption>
+</figure>
+<p>Below, we’ll develop the solver step by step.</p>
+<h2 id="building-the-solver">Building the solver</h2>
+<p>A brief disclaimer before we get started: I learnt all that I know about Mercury and logic programming from this one project, so it’s quite likely that I get some things wrong. If I come across as falsely authoritative below, I apologize. Any corrections much appreciated, as well as suggestions that would make the code more idiomatic.</p>
+<p>My main sources were the excellent <a href="http://www.mercurylang.org/documentation/papers/book.pdf">Mercury tutorial</a> and the <a href="http://www.mercurylang.org/information/doc-release/mercury_library/index.html">library documentation</a>. There’s also some useful examples in the source distribution, which I found a little late. To run this at home, it looks like you have to compile Mercury from source, though Linux users may be lucky? Fortunately, it turned out to be quite straightforward to build.</p>
+<h3 id="the-header">The header</h3>
+<p>If you paste all the code from this post into a file <code>wordplace.m</code> (or download it from <a href="https://github.com/robx/puzzles/raw/master/words/wordplace.m">github</a>), you can compile it with <code>mmc --make wordplace</code>, then run <code>./wordplace</code>.</p>
+<p>We start with a standard header section, which states that all we’re exporting is the <code>main</code> predicate, and which imports a bunch of modules from the <a href="http://www.mercurylang.org/information/doc-release/mercury_library/index.html">standard library</a>.</p>
+<pre><code>:- module wordplace.
+
+:- interface.
+
+:- import_module io.
+
+:- pred main(io::di, io::uo) is det.
+
+:- implementation.
+
+:- import_module char.
+:- import_module int.
+:- import_module list.
+:- import_module map.
+:- import_module maybe.
+:- import_module solutions.
+:- import_module string.</code></pre>
+<h3 id="types-and-data">Types and data</h3>
+<p>Next, we define some types in order to be able to express the puzzle. We’re working with a two-dimensional square grid of characters; the puzzle is specified by the size of the grid, by the hints (characters at points), and the word we’re trying to place.</p>
+<p>There’s no particular reason I went with named fields for <code>size</code> and a plain pair of integers for <code>point</code> here. They’re mostly the same, for our purposes at least. (There’s also an explicit <code>pair</code> type in the standard library (<a href="http://www.mercurylang.org/information/doc-release/mercury_library/pair.html">pair</a>), don’t ask me why.) For <code>word</code>, we might have chosen <code>string</code> instead, but lists of characters seem easier to work with.</p>
+<p><code>size</code> and <code>puzzle</code> are both new types, with the difference that the fields are named for <code>size</code>, the others are just new type names. There’s no need for the the left “<code>puzzle</code>” (the type name) to agree with the right “<code>puzzle</code>” (the data constructor).</p>
+<pre><code>:- type hint == {point, char}.
+:- type word == list(char).
+:- type size ---&gt; size(width :: int, height :: int).
+:- type puzzle ---&gt; puzzle(size, word, list(hint)).</code></pre>
+<p>Our sample puzzle is then simply a constant function with no arguments, with value <code>P</code> of type <code>puzzle</code> constructed from its parts.</p>
+<pre><code>:- func sample = puzzle.
+sample = P :-
+    S = size(7, 7),
+    W = string.to_char_list(&quot;PUZZLE&quot;),
+    Hs = [ {{1, 6}, 'P'}, {{2, 6}, 'P'}, {{3, 6}, 'U'}
+         , {{4, 5}, 'U'}, {{6, 5}, 'P'}
+         , {{1, 4}, 'E'}, {{2, 4}, 'Z'}, {{4, 4}, 'E'}, {{6, 4}, 'Z'}
+         , {{0, 3}, 'L'}, {{3, 3}, 'Z'}, {{6, 3}, 'L'}
+         , {{0, 2}, 'P'}, {{2, 2}, 'U'}, {{4, 2}, 'Z'}, {{5, 2}, 'E'}
+         , {{0, 1}, 'U'}, {{2, 1}, 'Z'}
+         , {{3, 0}, 'L'}, {{4, 0}, 'U'}, {{5, 0}, 'P'}
+         ],
+    P = puzzle(S, W, Hs).</code></pre>
+<p>We’ll also need some way to represent the character grid. Here, we’ll go with a <a href="http://www.mercurylang.org/information/doc-release/mercury_library/map.html">map</a> of <code>point</code> to <code>char</code>. A cell is empty if the corresponding point is not in the map, otherwise the character in that cell is the mapped value. We also include the size of the grid, and agree to index the cells with pairs <code>{0..width-1,0..height-1}</code>.</p>
+<pre><code>:- type grid ---&gt; grid(size :: size, map :: map(point, char)).</code></pre>
+<h3 id="an-outline-and-main">An outline, and <code>main</code></h3>
+<p>Now we’re ready to declare the core of our solver:</p>
+<pre><code>:- pred solve(puzzle::in, grid::out) is nondet.</code></pre>
+<p><code>solve(P, G)</code> states that the grid <code>G</code> is a solution of the puzzle <code>P</code>. Futhermore, we’re saying that we’ll give a definition of <code>solve</code> that allows determining such <code>G</code> given <code>P</code> (the <code>in</code> and <code>out</code> modes), and that for a given <code>P</code>, there may be 0 to many <code>G</code> (<code>nondet</code>).</p>
+<p>The fun part will be implementing <code>solve</code>, but first let’s wrap it in a proper program. Our aim is simply to find and print all solutions to the puzzle. Printing is handled by a deterministic predicate <code>print_grids</code> (implementation deferred), which takes a list of grids, and transforms the state of the world (which has type <code>io</code>). Compare to the declaration of the <code>main</code> predicate in the header.</p>
+<pre><code>:- pred print_grids(list(grid)::in, io::di, io::uo) is det.</code></pre>
+<p>The <a href="http://www.mercurylang.org/information/doc-release/mercury_library/solutions.html">solutions</a> module provides some tools for getting at all results of a predicate. <code>solutions.solutions</code> in particular returns all outputs of a one-parameter predicate. Now we can define <code>main</code>:</p>
+<pre><code>main(IO_in, IO_out) :-
+    solutions(pred(G::out) is nondet :- solve(sample, G),
+              Gs),
+    print_grids(Gs, IO_in, IO_out).</code></pre>
+<p>The first argument to <code>solutions</code> is an anonymous predicate that’s the partial application of <code>solve</code> to our sample puzzle.</p>
+<p>This is probably a good point to think about how to think about that definition of <code>main</code>: We’re not saying to first compute the solutions, afterwards print the grids. Instead, we’re saying that the predicate <code>main</code> is the conjunction of the two statements, the comma should be read as “and”. We leave it to the compiler to actually do something with that definition.</p>
+<p><code>main</code> transforms the state of the world from <code>IO_in</code> to <code>IO_out</code> if and only if <code>Gs</code> is the list of solutions to our puzzle, and printing the grids <code>Gs</code> transforms the world from <code>IO_in</code> to <code>IO_out</code>. Now running the program means finding out what <code>main</code> does to the state of the world, which means finding out what <code>print_grids</code> does, which depends on <code>Gs</code>. So <code>solutions</code> needs to be “called” first, before <code>print_grids</code> can be “called” on the results.</p>
+<p>In particular, the order of the statements doesn’t matter, we might as well have placed that <code>print_grids</code> statement at the beginning. That said, it’s helpful to order definitions in a way that they can be evaluated top-to-bottom.</p>
+<h3 id="solving-the-puzzle">Solving the puzzle</h3>
+<p>We’ll let the grid do most of the work. First, let’s set it up properly, by setting the size and initializing the underlying map.</p>
+<pre><code>:- pred init_grid(size::in, grid::out) is det.
+init_grid(S, G) :-
+    map.init(M),
+    G = grid(S, M).</code></pre>
+<p>Some bounds checking will be useful. Note that the following two predicates are in a sense the same: They both state that the point <code>P</code> is within the bounds given by <code>S</code>. But as defined below, <code>in_bounds</code> tests this property, while <code>nondet_in_bounds</code> generates points within the given bounds.</p>
+<pre><code>:- pred in_bounds(size::in, point::in) is semidet.
+in_bounds(S, {X, Y}) :-
+    X &gt;= 0,
+    Y &gt;= 0,
+    X &lt; S^width,
+    Y &lt; S^height.
+
+:- pred nondet_in_bounds(size::in, point::out) is nondet.
+nondet_in_bounds(S, {X, Y}) :-
+    size(W, H) = S,
+    int.nondet_int_in_range(0, W - 1, X),
+    int.nondet_int_in_range(0, H - 1, Y).</code></pre>
+<p>With this, we’re ready to define the fundamental grid operation, placing a character <code>C</code> at a point <code>P</code> in a grid <code>G</code>. This is semi-deterministic: If the position is out of bounds, or if there’s already a different character at that location, the character can’t be placed. Otherwise, the resulting grid is unique. In other words, there’s at most one result.</p>
+<pre><code>:- pred place_char(point::in, char::in, grid::in, grid::out) is semidet.
+place_char(P, C, Gin, Gout) :-
+    grid(S, M) = Gin,
+    in_bounds(S, P),
+    map.search_insert(P, C, OldC, M, M1),
+    (
+        OldC = no
+    ;
+        OldC = yes(C)
+    ),
+    Gout = grid(S, M1).</code></pre>
+<p>Line by line, we first deconstruct the input grid, then check that the point is in bounds. We rely on <a href="http://www.mercurylang.org/information/doc-release/mercury_library/map.html">map.search_insert</a> to handle the conditional map update. Its input parameters are the point <code>P</code>, the character <code>C</code>, and the original map <code>M</code>. Its output consists of <code>OldC</code> which has type <code>maybe(char)</code>, and the modified map <code>M1</code>. A <code>maybe(char)</code> is either nothing (<code>no</code>) or some character (<code>yes('a')</code>). Now <code>search_insert</code> does one of two things: If the map already contains <code>P</code> with value <code>D</code>, the map isn’t changed, and <code>OldC</code> is set to <code>yes(D)</code>. Otherwise, the element is inserted, and <code>OldC</code> is set to <code>no</code>.</p>
+<p>Following the optional insert we see a disjunction: We say it’s fine if <code>OldC</code> is <code>no</code> (i.e., the cell was previously empty), or if <code>OldC</code> is <code>yes(C)</code> (i.e., the cell was previously occupied, but with the character we’re trying to place. The case that we’re deliberately omitting is <code>yes(D)</code> for some other character <code>D</code>: that’s a real collision.</p>
+<p>Finally, we put <code>S</code> and the modified map <code>M1</code> back together to yield the result grid.</p>
+<p>Building on this, we can define a couple of predicates to place more than one character at a time. First, a list of located characters (we could use <code>foldl</code> here instead of explicit recursion).</p>
+<pre><code>:- pred place_chars(list({point, char}):: in, grid::in, grid::out) is semidet.
+place_chars([], Gin, Gout) :-
+    Gout = Gin.
+place_chars([{P, C}|Xs], Gin, Gout) :-
+    place_char(P, C, Gin, G1),
+    place_chars(Xs, G1, Gout).</code></pre>
+<p>Next, placing a <code>word</code> in a specified direction starting at a given point.</p>
+<pre><code>:- type dir == {int, int}.
+
+:- func move(dir, point) = point.
+move({DX, DY}, {PX, PY}) = {PX + DX, PY + DY}.
+
+:- pred place_word(point::in, dir::in, word::in,
+                   grid::in, grid::out) is semidet.
+place_word(_, _, [], Gin, Gout) :-
+    Gin = Gout.
+place_word(P, D, [C|Cs], Gin, Gout) :-
+    place_char(P, C, Gin, G),
+    P1 = move(D, P),
+    place_word(P1, D, Cs, G, Gout).</code></pre>
+<p>Or placing a <code>word</code> in an arbitrary direction at an arbitrary point:</p>
+<pre><code>:- func dirs = list(dir).
+dirs = [ {-1,-1}, {-1, 0}, {-1, 1}, { 0, 1}
+       , { 1, 1}, { 1, 0}, { 1,-1}, { 0,-1}
+       ].
+
+:- pred place_word_any(word::in, grid::in, grid::out) is nondet.
+place_word_any(W, Gin, Gout) :-
+    grid(S, _) = Gin,
+    nondet_in_bounds(S, P),
+    list.member(D, dirs),
+    place_word(P, D, W, Gin, Gout).</code></pre>
+<p>Puzzle solved:</p>
+<pre><code>solve(Pz, Gout) :-
+    Pz = puzzle(S, W, Hs),
+    init_grid(S, G0),
+    place_chars(Hs, G0, G1),
+    place_word_any(W, G1, Gout).</code></pre>
+<h3 id="printing-the-solutions">Printing the solutions</h3>
+<p>To finish off the program, we still need to implement <code>print_grids</code>. That’s below. <del>with some code that feels a little suboptimal. I’m sure it’s not necessary to define ranges of integers, and there must be a more elegant way to convert from a semi-deterministic predicate to a maybe type than going through lists. But it works.</del> <strong>Edit</strong> Improved version, thanks to Paul Bone.</p>
+<p>By the way, the <code>!IO</code> is just magic syntax for stringing through a list of modifications, we might have used <code>!G</code> at some points above where we did the <code>Gin</code>, <code>G1</code>, <code>Gout</code> dance.</p>
+<pre><code>:- func int_range(int) = list(int).
+int_range(N) = (if N =&lt; 0 then [] else [N - 1|int_range(N - 1)]).
+
+:- pred char_at(grid::in, point::in, char::out) is semidet.
+char_at(G, P, C) :-
+    C = map.search(G^map, P).
+
+:- func show_char(grid, point) = char.
+show_char(G, P) = C :-
+    ( if char_at(G, P, CPrime) then
+        C = CPrime
+    else
+        C = ('.')
+    ).
+
+:- func show_line(grid, int) = string.
+show_line(G, Y) =
+    string.from_char_list(
+        map(func(X) = show_char(G, {X, Y}),
+            list.reverse(int_range(G^size^width)))
+    ).
+
+:- func show(grid) = list(string).
+show(G) = map(func(Y) = show_line(G, Y), int_range(G^size^height)).
+
+:- pred write_line(string::in, io::di, io::uo) is det.
+write_line(L, !IO) :- io.format(&quot;%s\n&quot;, [s(L)], !IO).
+
+print_grids([], !IO).
+print_grids([G|Gs], !IO) :-
+    foldl(write_line, show(G), !IO),
+    print_grids(Gs, !IO).</code></pre>
+    </section>
+</article>
+
+        </main>
+    </body>
+</html>

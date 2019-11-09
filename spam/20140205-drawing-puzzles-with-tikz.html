@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>spam - Drawing puzzles with TikZ</title>
+        <link rel="stylesheet" href="../css/default.css" />
+    </head>
+    <body>
+        <main role="main">
+            <h1>Drawing puzzles with TikZ</h1>
+            <article>
+    <section class="header">
+        <time>February  5, 2014</time>
+        
+        
+            <span class="orig">
+                previously published at <a href="https://maybepuzzles.com/2014/02/05/drawing-puzzles-with-tikz/">maybepuzzles</a>
+            </span>
+        
+    </section>
+    <section>
+        <p>There seems to be a lack of information out there when it comes to rendering puzzles. The most obvious approach is probably to use a vector graphics program such as <a href="http://inkscape.org">Inkscape</a>, but people also use spreadsheet software or write Postscript directly. I’ve recently started using the Haskell <a href="http://projects.haskell.org/diagrams/">Diagrams</a> framework (more on that in a future post), but for today, I want to share how to render pretty puzzles using TikZ via LaTeX.</p>
+<p>Simplifying things a bit, <a href="http://en.wikipedia.org/wiki/PGF/TikZ">TikZ</a> is a vector graphics package for the <a href="http://en.wikipedia.org/wiki/LaTeX">LaTeX</a> document preparation system. If you want to follow along at home, install some TeX system, typically via your OS’ packaging system or from <a href="https://www.tug.org/texlive/">TeX Live</a>. We’ll be writing a text file <code>puzzle.tex</code>; running <code>pdflatex puzzle.tex</code> will yield <code>puzzle.pdf</code> if nothing goes wrong. Or use <a href="https://www.tug.org/texworks/">TeXworks</a>.</p>
+<p>As an example, we’ll draw a small Slalomrundweg, see the <a href="http://www.logic-masters.de/Raetselportal/Raetsel/zeigen.php?id=00016Q">Rätselportal</a> for the rules. Here’s what it will look like:</p>
+<figure>
+<img src="../images/slalomrundweg.png" width="380" alt /><figcaption>Slalomrundweg</figcaption>
+</figure>
+<p>We’ll start with some boilerplate; it’s a good idea to keep the code below in a file <code>template.tex</code>:</p>
+<pre><code>\documentclass{article}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+
+\usepackage[tightpage,active]{preview}
+\PreviewEnvironment{tikzpicture}
+
+\begin{document}
+\begin{tikzpicture}[scale=0.8]
+
+% insert puzzle here
+
+\end{tikzpicture}
+\end{document}</code></pre>
+<p>This sets up a basic LaTex document that consists of a single TikZ picture. We tell LaTeX to load TikZ, including the <code>arrows</code> library, and to produce an output file that contains just the <code>tikzpicture</code> we’re going to fill in below. Cropping the document to that picture is what the mysterious <code>preview</code> stuff is for. One thing to note is the option <code>scale</code> to the <code>tikzpicture</code> environment: The default unit is 1cm, so this makes our grid cells have size 8mm.</p>
+<p>Let’s put in a grid:</p>
+<pre><code>\draw[thin, black!50] (0,0) grid (6,6);
+\draw[very thick] (0,0) rectangle (6,6);</code></pre>
+<p>Pretty easy, right? Paste this inside the <code>tikzpicture</code> environment and render it, and you should see an empty grid. The edges might not be very nice because of how <code>preview</code> crops the document to the picture; we could fix this by setting a <code>PreviewBorder</code>, but instead we’ll just enlarge the picture size. This will also make the image stay centered once we add the arrows.</p>
+<pre><code>\path (-1,-1) rectangle (7,7);</code></pre>
+<p><code>\path</code> is like <code>\draw</code>, except that it doesn’t use a pen. Next, we’ll add the clues. To just put the letter <code>A</code> at the point (2,3), we’d use <code>\node at (2,3) {A};</code>, but we need a little more than that for our circled clues.</p>
+<pre><code>\tikzstyle{clue} = [
+    circle,
+    draw,
+    fill=white,
+    inner sep=2pt,
+    font=\sffamily\large
+]
+
+\foreach \x/\y/\c in {1/1/1, 1/5/1, 5/1/3, 5/5/4, 3/3/1}
+    \node[clue] at (\x,\y) {\c};</code></pre>
+<p>First we define the style of our clue nodes. This isn’t strictly necessary, it just means that when we write <code>\node[clue]</code>, the <code>clue</code> part is replaced by all the things in the earlier list. Those are:</p>
+<dl>
+<dt><code>circle</code></dt>
+<dd><p>the outline of the node is a circle</p>
+</dd>
+<dt><code>draw</code></dt>
+<dd><p>we want the outline to be drawn</p>
+</dd>
+<dt><code>fill=white</code></dt>
+<dd><p>we fill the background in white, to cover the grid lines</p>
+</dd>
+<dt><code>inner sep=2pt</code></dt>
+<dd><p>a margin between the text and the circle (the node is sized to accomodate the text, which might not really be what we want here…)</p>
+</dd>
+<dt><code>font=\sffamily\large</code></dt>
+<dd><p>choose the text font and size</p>
+</dd>
+</dl>
+<p>Then, we use <code>\foreach</code> to place the clues at the given coordinates.</p>
+<p>Finally, let’s add the arrows for the solution code. There’s some tricky stuff here that’s required to get them to look just right.</p>
+<pre><code>\tikzstyle{arr} = [
+    -triangle 90,
+    line width=0.4mm,
+    postaction={draw, line width=0.1cm, shorten &gt;=0.1cm, -}
+]
+\draw[arr] (-0.7,3) -- (-0.2,3);
+\draw[arr] (3,6.7) -- (3,6.2);</code></pre>
+<p>That’s it! As a bonus, and at the risk of spoiling the puzzle, add the following. Best between drawing the grid and drawing the clues.</p>
+<pre><code>\draw[ultra thick, black!70]
+    (3,5) -- (1,3) -- (3,1) -- (5,3)
+    (1,1) -- (2,2)    (1,5) -- (2,4)
+    (4,0) -- (6,2)    (5,1) -- (6,0)
+    (3,3) -- (6,6)    (4,6) -- (6,4);
+\draw[ultra thick, red!70]
+    (1,0) -- (2,1) -- (3,0) -- (6,3)
+          -- (5,4) -- (3,2) -- (2,3)
+          -- (4,5) -- (3,6) -- (2,5)
+          -- (1,6) -- (0,5) -- (1,4)
+          -- (0,3) -- (1,2) -- (0,1) -- (1,0);</code></pre>
+    </section>
+</article>
+
+        </main>
+    </body>
+</html>
