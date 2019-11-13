@@ -59,7 +59,7 @@ jobs:
       GHC_VERSION: &#39;8.6.5&#39;
       CABAL_VERSION: &#39;3.0&#39;</code></pre>
 <aside>
-These lines define environment variables that are available in commands that we run from this job, although we don’t use them as such. Additionally, they variables are stored in the <code>env</code> “context”, and thus available within the workflow below. Note that the <code>env</code> context does <em>not</em> include environment variables beyond those defined within the workflow.
+These lines define environment variables that are available in commands that we run from this job, although we don’t use them as such. Additionally, they are stored in the <code>env</code> “context”, and thus available within the workflow below. Note that the <code>env</code> context does <em>not</em> include environment variables beyond those defined within the workflow.
 </aside>
 </section>
 <section>
