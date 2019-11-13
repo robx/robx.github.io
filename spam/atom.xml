@@ -124,7 +124,7 @@ When run, this action will restore any existing archive under the given key, fal
     branches:
       - master</code></pre>
 </aside>
-To configure the <a href="https://developer.github.com/v3/guides/managing-deploy-keys/#deploy-keys">deploy key</a>, generate an ssh keypair, add the public key to the github pages repository as a deploy key, and store the private key in the source repository secrets under the key <code>ACTIONS_DEPLOY_KEY</code>. The <a href="https://github.com/peaceiris/actions-gh-pages#1-add-ssh-deploy-key">README</a> of this action has detailed instructions.
+To configure the <a href="https://developer.github.com/v3/guides/managing-deploy-keys/#deploy-keys">deploy key</a>, generate an ssh key-pair, add the public key to the github pages repository as a deploy key, and store the private key in the source repository secrets under the key <code>ACTIONS_DEPLOY_KEY</code>. The <a href="https://github.com/peaceiris/actions-gh-pages#1-add-ssh-deploy-key">README</a> of this action has detailed instructions.
 </section>
 <h1 id="some-extra-snippets">Some extra snippets</h1>
 <h2 id="debugging">Debugging</h2>
@@ -149,7 +149,7 @@ To configure the <a href="https://developer.github.com/v3/guides/managing-deploy
       cabal-store-${{ runner.OS }}-
 - run: cabal build --only-dependencies</code></pre>
 <p>This generates an up-to-date freeze file and uses it to compute the cache key.</p>
-<p>It’s necessary to get the version information into the cache key instead of just e.g. hashing the cabal file itself: Otherwise, the cache key will be constant across runs whence the cache won’t be updated, even as the cache gets outdated in relatiuon to upstream.</p>
+<p>It’s necessary to get the version information into the cache key instead of just e.g. hashing the cabal file itself: Otherwise, the cache key will be constant across runs whence the cache won’t be updated, even as the cache gets outdated in relation to upstream.</p>
 <aside>
 As dependencies get updated, the cache will keep growing. This seems to be a general problem with dependency caching that I don’t see a good way around.
 </aside>
