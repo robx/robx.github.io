@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>spam - Haskell, Hakyll and Github Actions</title>
+        <link rel="stylesheet" href="../css/default.css" />
+    </head>
+    <body>
+        <main role="main">
+            <h1>Haskell, Hakyll and Github Actions</h1>
+            <article>
+    <section class="header">
+        <time>November 13, 2019</time>
+        
+        
+    </section>
+    <p>This is a short write-up on my current set-up for deploying this site. It covers:</p>
+<ul>
+<li>building Haskell projects with Github Actions, including caching</li>
+<li>generating and deploying a static site via Github Actions</li>
+</ul>
+<h1 id="the-manual-workflow">The manual workflow</h1>
+<p>The site is generated using the <a href="https://jaspervdj.be/hakyll/">Hakyll</a> static site generator. Using it involves writing a small Haskell program <code>site</code> that calls out to the Hakyll libraries to build the website.</p>
+<p>This program and the rest of the website sources live in one repository, and are deployed to Github Pages by pushing to a second repository, <a href="https://github.com/robx/robx.github.io">robx/robx.github.io</a>. The actual source repository is private, but you can checkout a snapshot at <a href="https://github.com/robx/site-demo">robx/site-demo</a>.</p>
+<p>Updating the site then takes four steps:</p>
+<ol start="0" type="1">
+<li>edit some website source files</li>
+<li>build the <code>site</code> executable</li>
+<li>run <code>site</code> to generate the website content</li>
+<li>commit and push the updated website to the destination repository</li>
+</ol>
+<p>Doing this manually, we would build the executable using <code>cabal build</code>, then build the site using <code>cabal exec site build</code>, and finally do something along the following lines to deploy:</p>
+<pre><code>$ cd /src/robx/robx.github.io
+$ rm -r * &amp;&amp; cp -r /src/robx/site/_site/* .
+$ git add -A &amp;&amp; git commit -m &quot;update website&quot; &amp;&amp; git push</code></pre>
+<h1 id="the-automatic-workflow">The automatic workflow</h1>
+<p>Since doing this by hand is too much work and a bit error prone, let’s automate it using Github Actions. To do this, we define a workflow using a YAML file <code>build-deploy.yml</code> that lives in <code>.github/workflows/</code>. You can view the full <a href="https://github.com/robx/site-demo/blob/master/.github/workflows/build-deploy.yml">workflow file</a>, or check the (messy) <a href="https://github.com/robx/site-demo/actions">run history</a> at the demo repository. Below, we’ll go through that file chunk by chunk.</p>
+<section>
+<p>Our workflow gets a name, is set up to execute on push events, and has one job with id <code>build</code>.</p>
+<pre><code>name: Build and deploy to github pages
+on: push
+
+jobs:
+  build-deploy:</code></pre>
+</section>
+<section>
+<p>Now comes the body of our <code>build-deploy</code> job. It gets a name as well as a base virtual environment. We also set some variables, since we’ll need to refer to the tool versions twice later on.</p>
+<pre><code>    name: Build and deploy
+    runs-on: ubuntu-latest
+    env:
+      GHC_VERSION: '8.6.5'
+      CABAL_VERSION: '3.0'</code></pre>
+<aside>
+These variable definitions define environment variable that are available in commands that we run from this job, although we don’t use them as such. Additionally, these variables are stored in the <code>env</code> “context”, and thus available within the workflow below. Note that the <code>env</code> context does <em>not</em> include environment variables beyond those defined within the workflow.
+</aside>
+</section>
+<section>
+<p>Finally, we give a list of steps that the job should perform. First, we call out to a github-provided action that checks out the working tree corresponding to the event that triggered the workflow.</p>
+<pre><code>    steps:
+      - uses: actions/checkout@master</code></pre>
+<aside>
+There are a number of packaged workflow components, available either from GitHub in the <a href="https://github.com/actions/">actions</a> organization, or from others via the <a href="https://github.com/marketplace?type=actions">marketplace</a>. The <code>checkout</code> action is defined in the repository <a href="https://github.com/actions/checkout">actions/checkout</a>.
+</aside>
+</section>
+<section>
+<p>Next, we call out to an action to install a Haskell toolchain. We specify versions for GHC and Cabal, referring to the variables using an adhoc expression language.</p>
+<pre><code>      - uses: actions/setup-haskell@v1
+        with:
+          ghc-version: ${{env.GHC_VERSION}}
+          cabal-version: ${{env.CABAL_VERSION}}</code></pre>
+</section>
+<section>
+<p>Building Haskell projects tends to take too much time: A fresh build of Hakyll on the Github Actions infrastructure takes around 30 minutes. So we’ll cache the compiled dependencies. We’ll be using Cabal’s Nix-style builds here, which store artifacts in <code>$HOME/.cabal/store</code>.</p>
+<p>The way caching works, we need to provide a cache key that includes full dependency version information. For simplicity, we’ll assume the existence of a Cabal version locking file <code>cabal.project.freeze</code>; see below for another approach.</p>
+<pre><code>      - name: 'Run actions/cache@v1: cache cabal store'
+        uses: actions/cache@v1
+        with:
+          path: ~/.cabal/store
+          key: cabal-store-${{ runner.OS }}-${{ env.GHC_VERSION }}-${{ hashFiles('cabal.project.freeze') }}
+          restore-keys: |
+            cabal-store-${{ runner.OS }}-${{ env.GHC_VERSION }}-
+            cabal-store-${{ runner.OS }}-</code></pre>
+When run, this action will restore any existing archive under the given key, falling back to any of the alternate keys listed under <code>restore-keys</code>. In addition, the action has a “post action”, which will save an archive at the end of a successful run.
+</section>
+<section>
+<p>Now we’re ready to execute a couple of commands to build the Haskell project and generate the site:</p>
+<pre><code>      - run: cabal update
+      - run: cabal build --only-dependencies
+      - run: cabal build
+      - run: cabal exec site build</code></pre>
+<ul>
+<li><code>cabal update</code> fetches the package database from hackage. (This package database might also be cached between runs, but at ~30s I didn’t bother so far.)</li>
+<li><code>cabal build --only-dependencies</code> builds the dependencies only. It’s useful to split this from the project build itself below:
+<ol type="1">
+<li>While getting things to work, we can disable later steps in order to get the dependency cache ready, making iterating on the later steps a lot faster.</li>
+<li>We can easily distinguish between problems with the project itself and with the packaging infrastructure.</li>
+</ol></li>
+<li><code>cabal build</code> builds the Hakyll <code>site</code> executable itself.</li>
+<li><code>cabal exec site build</code> calls this executable, generating the website.</li>
+</ul>
+</section>
+<section>
+<p>Finally, we check the commit the updated version of the site to the github pages repository, using one of a multitude of third party actions that deal with this task. This action in particular has the advantage of supporting ssh deploy keys, while most other actions appear to require a (far more powerful) personal access token to interact with a different repository.</p>
+<pre><code>      - name: 'Run peaceiris/actions-gh-pages@v2.5.0: deploy to github pages'
+        uses: peaceiris/actions-gh-pages@v2.5.0
+        env:
+          ACTIONS_DEPLOY_KEY: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          PUBLISH_BRANCH: master
+          PUBLISH_DIR: _site
+          EXTERNAL_REPOSITORY: robx/robx.github.io
+        if: github.ref == 'refs/heads/master'</code></pre>
+<p>The <code>if:</code> condition ensures that this step is only run on pushes to master.</p>
+<aside>
+<p>It’s nice to have the rest of the workflow execute also on other branches, to be able to debug it easily. If we didn’t want that, we might instead have limited the workflow to run only on pushes to master by filtering in the top-level <code>on:</code> field, as follows.</p>
+<pre><code>on:
+  push:
+    branches:
+      - master</code></pre>
+</aside>
+To configure the <a href="https://developer.github.com/v3/guides/managing-deploy-keys/#deploy-keys">deploy key</a>, generate an ssh keypair, add the public key to the github pages repository as a deploy key, and store the private key in the source repository secrets under the key <code>ACTIONS_DEPLOY_KEY</code>. The <a href="https://github.com/peaceiris/actions-gh-pages#1-add-ssh-deploy-key">README</a> of this action has detailed instructions.
+</section>
+<h1 id="some-extra-snippets">Some extra snippets</h1>
+<h2 id="debugging">Debugging</h2>
+<p>The following step is useful to have in there to aid in debugging a workflow. It stores a number of contexts to <code>env</code>, which is enough to be able to inspect them in the web interface.</p>
+<pre><code>- name: Dump contexts
+  env:
+    CTX_GITHUB: ${{ toJson(github) }}
+    CTX_STEPS: ${{ toJson(steps) }}
+    CTX_ENV: ${{ toJson(env) }}
+  run: true</code></pre>
+<h2 id="caching-with-cabal.project.freeze">Caching with cabal.project.freeze</h2>
+<p>To get reliable caching with <code>cabal</code> regardless of the existence of a freeze file, you can reorder things as follows:</p>
+<pre><code>- run: cabal update
+- run: '[ -e cabal.project.freeze ] || cabal freeze'
+- name: 'Run actions/cache@v1: cache cabal store'
+  uses: actions/cache@v1
+  with:
+    path: ~/.cabal/store
+    key: cabal-store-${{ runner.OS }}-${{ env.GHC_VERSION }}-${{ hashFiles('cabal.project.freeze') }}
+    restore-keys: |
+      cabal-store-${{ runner.OS }}-${{ env.GHC_VERSION }}-
+      cabal-store-${{ runner.OS }}-
+- run: cabal build --only-dependencies</code></pre>
+<p>This generates an up-to-date freeze file and uses it to compute the cache key.</p>
+<p>It’s necessary to get the version information into the cache key instead of just e.g. hashing the cabal file itself: Otherwise, the cache key will be constant across runs whence the cache won’t be updated, even as the cache gets outdated in relatiuon to upstream.</p>
+<aside>
+As dependencies get updated, the cache will keep growing. This seems to be a general problem with dependency caching that I don’t see a good way around.
+</aside>
+<h1 id="github-actions-pain-points-open-ends">Github Actions pain points, open ends</h1>
+<p>This works and I’m happy enough with it. Getting to this state was quite painful though, and I’m not thrilled with Github Actions in their current state. Some random thoughts:</p>
+<ul>
+<li><p>Storing the GHC version in <code>env</code>, and referencing this later, seems needlessly verbose. I’d prefer to be able to reference the inputs to <code>actions/setup-haskell</code> directly.</p></li>
+<li><p>Generally, the variable handling is messy. I spent hours trying to get the documented HOME environment variable into the cache path, before finding out that <code>~</code> works. It turns out it <em>is</em> possible to get environment variables to the expression level, by doing the following (yikes!):</p>
+<pre><code>- id: get-home
+  run: |
+    echo &quot;::set-output name=home::$HOME&quot;
+- uses: actions/cache@v1
+  with:
+    path: ${{ steps.get-home.outputs.home }}/.cabal/store</code></pre></li>
+<li><p>The whole thing has a very ad hoc feel to it, with lack of overall design. The language is strange – why bring Javascript-like property and index syntax into the <a href="https://help.github.com/en/actions/automating-your-workflow-with-github-actions/contexts-and-expression-syntax-for-github-actions">expression syntax</a>? What’s with the weird type coercion rules? In general, it feels like a bit more distance to the Javascript sphere might have been beneficial.</p></li>
+<li><p>I have doubts with respect to the trust model and third-party actions. I’m happy to trust the Github provided actions with my secrets, and I’m happy to trust e.g. <code>peaceiris/actions-gh-pages@v2.5.0</code> with my deploy key after reviewing it. But I don’t see any guarantees that it won’t be replaced by a malicious version.</p></li>
+<li><p>It’s easy to make typos in YAML field names that typically won’t give obvious errors. In general, getting to a working workflow is too much trial and error, due to a combination of a confused design and inaccurate documentation. The system seems best learnt by copying and modifying existing scripts.</p></li>
+<li><p>I like the option of using and providing third-party actions. However I’m not so convinced right now by the design here. I don’t see a (straightforward) way to bundle up <code>actions/setup-haskell</code> and <code>actions/cache</code> to provide a one-stop Haskell setup. And neither dropping to the Docker level nor using NodeJS (why?) are appealing.</p></li>
+</ul>
+<p>There are also some open ends on the Haskell side of things.</p>
+<ul>
+<li><p>I’m building the site with <code>stack</code> locally, instead of <code>cabal</code>. I went with <code>cabal</code> here because that’s what <code>actions/setup-haskell</code> provides, but would prefer to set this up with <code>stack</code>.</p></li>
+<li><p>I’m using a forked version of Hakyll via <a href="https://github.com/robx/site-demo/blob/master/cabal.project">cabal.project</a>, and that is getting rebuilt every time. It would be nice to figure out how to cache this.</p></li>
+</ul>
+</article>
+
+        </main>
+    </body>
+</html>

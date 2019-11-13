@@ -20,8 +20,7 @@
             </span>
         
     </section>
-    <section>
-        <p>There seems to be a lack of information out there when it comes to rendering puzzles. The most obvious approach is probably to use a vector graphics program such as <a href="http://inkscape.org">Inkscape</a>, but people also use spreadsheet software or write Postscript directly. I’ve recently started using the Haskell <a href="http://projects.haskell.org/diagrams/">Diagrams</a> framework (more on that in a future post), but for today, I want to share how to render pretty puzzles using TikZ via LaTeX.</p>
+    <p>There seems to be a lack of information out there when it comes to rendering puzzles. The most obvious approach is probably to use a vector graphics program such as <a href="http://inkscape.org">Inkscape</a>, but people also use spreadsheet software or write Postscript directly. I’ve recently started using the Haskell <a href="http://projects.haskell.org/diagrams/">Diagrams</a> framework (more on that in a future post), but for today, I want to share how to render pretty puzzles using TikZ via LaTeX.</p>
 <p>Simplifying things a bit, <a href="http://en.wikipedia.org/wiki/PGF/TikZ">TikZ</a> is a vector graphics package for the <a href="http://en.wikipedia.org/wiki/LaTeX">LaTeX</a> document preparation system. If you want to follow along at home, install some TeX system, typically via your OS’ packaging system or from <a href="https://www.tug.org/texlive/">TeX Live</a>. We’ll be writing a text file <code>puzzle.tex</code>; running <code>pdflatex puzzle.tex</code> will yield <code>puzzle.pdf</code> if nothing goes wrong. Or use <a href="https://www.tug.org/texworks/">TeXworks</a>.</p>
 <p>As an example, we’ll draw a small Slalomrundweg, see the <a href="http://www.logic-masters.de/Raetselportal/Raetsel/zeigen.php?id=00016Q">Rätselportal</a> for the rules. Here’s what it will look like:</p>
 <figure>
@@ -99,7 +98,6 @@
           -- (4,5) -- (3,6) -- (2,5)
           -- (1,6) -- (0,5) -- (1,4)
           -- (0,3) -- (1,2) -- (0,1) -- (1,0);</code></pre>
-    </section>
 </article>
 
         </main>

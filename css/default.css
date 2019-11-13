@@ -6,7 +6,7 @@ nav a {
 /* based on https://jrl.ninja/etc/post.css */
 body {
   font-family: Liberation Sans, sans-serif;
-  background-color: #fef7eb;
+  background-color: #fffcf2;
   line-height: 1.5;
 }
 main {
@@ -20,6 +20,9 @@ header {
 h1 {
   margin-bottom: .5rem;
 }
+article h2 {
+  font-size: 1.125em;
+}
 .header {
   overflow: hidden; /* makes the floated .orig stick inside */
 }
@@ -32,14 +35,24 @@ time {
   font-style: italic;
   float: right;
 }
+aside {
+  font-style: italic;
+  margin-left: 4ch;
+  margin-right: 4ch;
+  font-size: smaller;
+}
 pre {
-  white-space: pre-wrap;
+  overflow: scroll;
+  text-overflow: ellipsis;
+  border: 1px solid lightgray;
+  padding: 5px;
 }
 hr {
   margin-top: 2rem;
 }
 a {
-  color: #ff3c3c;
+  color: #66645e;
+  font-weight: 500;
   text-decoration: none;
   outline: 0;
 }
