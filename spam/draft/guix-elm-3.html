@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Guix and Elm, part 3: Deploying an Elm web application</title>
+        <link rel="stylesheet" href="../../css/default.css" />
+    </head>
+    <body>
+        <main role="main">
+            <h1>Guix and Elm, part 3: Deploying an Elm web application</h1>
+            <article>
+    <section class="header">
+        <time>November 27, 2019</time>
+        
+        
+    </section>
+    <p>This is the third in a series of articles on working with Elm in Guix. See the <a href="guix-elm-1.html">first article</a> for an introduction. The outline is:</p>
+<ol type="1">
+<li><a href="guix-elm-1.html">packaging the Elm compiler</a></li>
+<li><a href="guix-elm-2.html">developing Guix infrastructure for building Elm apps, and using this to package the Elm reactor, and the full Elm tool</a></li>
+<li>deploying an Elm web application on Guix System</li>
+</ol>
+<p>In <a href="guix-elm-2.html">part 2</a> of this series, we ended up with a Guix package which outputs the compiled Javascript of our sample Elm applications:</p>
+<pre><code>$ cat puzzle-draw.scm
+(define-module (puzzle-draw)
+  ...)
+
+(define-public puzzle-draw-elm
+  (package
+    (name &quot;puzzle-draw-elm&quot;)
+    (version &quot;current&quot;)
+    (source &quot;/home/rob/puzzle-draw/web&quot;)
+    (build-system elm-application-build-system)
+    (arguments
+      `(#:elm-modules (((&quot;Main.elm&quot;) . &quot;web.js&quot;)))))
+    ...))
+
+$ guix build -L . puzzle-draw-elm
+[...]
+/gnu/store/dd3i77nimvp17vgrak14yshd10mfm66c-puzzle-draw-elm-current
+$ ls /gnu/store/dd3i77nimvp17vgrak14yshd10mfm66c-puzzle-draw-elm-current
+web.js</code></pre>
+<p>Below, we’ll figure out how to serve this up on Guix System via nginx:</p>
+<ol type="1">
+<li>Wrap <code>puzzle-draw-elm</code> in a package <code>puzzle-draw-frontend</code> that bundles a web server and static assets.</li>
+<li>Define a Shepherd service to run that web server.</li>
+<li>Configure the system to hook this server up to nginx, and redeploy it.</li>
+</ol>
+<h1 id="a-full-package-for-the-puzzle-draw-web-application">A full package for the puzzle-draw web application</h1>
+<p>puzzle-draw comes with a web server executable that serves a backend API next to static content: <a href="https://github.com/robx/puzzle-draw/blob/master/src/serve/Main.hs">src/serve/Main.hs</a>, so we’ll go ahead and package the two together. Alternatively, we might package the static files separately from the backend API, and hook both up to the public-facing web server independently below.</p>
+<p>Let’s assume we’ve packaged <code>puzzle-draw</code> already as a Haskell project. <a href="guix-elm-1.html">Part 1</a> goes into details of how to do that with the example of the <code>elm</code> tool.</p>
+<pre><code>(define-public puzzle-draw
+  (package
+    (name &quot;puzzle-draw&quot;)
+    (version &quot;current&quot;)
+    (source &quot;/home/rob/puzzle-draw&quot;)
+    (build-system haskell-build-system)
+    ...
+    (synopsis
+     &quot;Creating graphics for pencil puzzles&quot;)
+    (description
+     &quot;puzzle-draw is a library and tool for drawing pencil puzzles using Diagrams.
+    It aims to provide a utility layer on top of Diagrams to help with drawing arbitrary
+    puzzles, and to support several specific puzzles types In addition, it includes
+    functionality for parsing puzzle data from a YAML file format.&quot;)
+    (license license:expat)))</code></pre>
+<p>Then we can combine <code>puzzle-draw-elm</code> and <code>puzzle-draw</code> by providing a builder script to the trivial build system:</p>
+<pre><code>(define-public puzzle-draw-frontend
+  (package
+    (name &quot;puzzle-draw-frontend&quot;)
+    (version &quot;current&quot;)
+    (source &quot;/home/rob/puzzle-draw&quot;)
+    (build-system trivial-build-system)
+    (inputs
+     `((&quot;puzzle-draw&quot; ,puzzle-draw)
+       (&quot;bash&quot; ,bash)))
+    (native-inputs
+     `((&quot;puzzle-draw-elm&quot; ,puzzle-draw-elm)))
+    (arguments
+     `(#:modules ((guix build utils))
+       #:builder
+       (begin
+         (use-modules (guix build utils))
+         (let* ((elm (assoc-ref %build-inputs &quot;puzzle-draw-elm&quot;))
+                (draw (assoc-ref %build-inputs &quot;puzzle-draw&quot;))
+                (source (assoc-ref %build-inputs &quot;source&quot;))
+                (bash (assoc-ref %build-inputs &quot;bash&quot;))
+                (out (assoc-ref %outputs &quot;out&quot;)))
+           (copy-recursively (string-append source &quot;/static&quot;) (string-append out &quot;/static&quot;))
+           (copy-recursively (string-append source &quot;/tests/examples&quot;) (string-append out &quot;/tests/examples&quot;))
+           (copy-recursively elm (string-append out &quot;/static&quot;))
+           (install-file
+            (string-append draw &quot;/bin/servepuzzle&quot;)
+            (string-append out &quot;/bin&quot;))
+           (setenv &quot;PATH&quot; (string-append (getenv &quot;PATH&quot;) &quot;:&quot; bash &quot;/bin&quot;))
+           (wrap-program             (string-append out &quot;/bin/servepuzzle&quot;)
+             `(&quot;PUZZLE_DRAW_ROOT&quot; &quot;:&quot; = (,out)))))))
+    (description #f)
+    (synopsis #f)
+    (license #f)
+    (home-page #f)))</code></pre>
+<p>The trivial build system does nothing but run its <code>builder</code> argument. That’s a Guile script that has access to source, inputs and output directory, as well as any explicitly provide Guile modules.</p>
+<p>We provide both <code>puzzle-draw</code> and <code>puzzle-draw-elm</code> as inputs, as well as <code>bash</code> since we’ll generate a wrapper shell script via <code>wrap-program</code> that will reference it.</p>
+<aside>
+<p>I’m a bit fuzzy on the distinction between <code>inputs</code> and <code>native-inputs</code>. In a cross-compilation setup, <code>inputs</code> will be built for the target, while <code>native-inputs</code> for the host. In that sense, it’s fine to put the Elm package in <code>native-inputs</code>, because the Javascript artifacts are platform-independent.</p>
+But I can’t quite align this interpretation with the common use of <code>native-inputs</code> to specify dependencies that are used for unit tests, but not the final build products. The point being that unit tests would be run on the host system, while output artefacts are built for the target system.
+</aside>
+<p>Guix always provides us with a Guile interpreter; via the <code>modules</code> argument, we instruct it to make the <code>(guix build utils</code> module available to our script.</p>
+<p>The script itself then merely copies our various ingredients to the output path, before wrapping <code>servepuzzle</code> in a shellscript that sets an environment variable to let the server know where to find its static files.</p>
+<h1 id="a-puzzle-draw-shepherd-service">A puzzle-draw Shepherd service</h1>
+<p>The <a href="https://www.gnu.org/software/shepherd/">GNU Shepherd</a> is Guix System’s <code>init</code>. It’s a Guile daemon originating as <code>dmd</code> with GNU Hurd.</p>
+<aside>
+Similar to Guix System’s Guile cron daemon <code>mcron</code>, I’m not convinced by the choice of Shepherd. It feels incomplete and lacking the robustness that I’d expect from a core system daemon. The choice of using these in Guix is probably down to a combination of wanting to do everything in Guile, and giving purpose to these projects.
+</aside>
+<p>To define this service within Guix, we define a new service type:</p>
+<pre><code>(define-public puzzle-draw-service-type
+  (service-type
+   (name 'puzzle-draw)
+   (extensions
+    (list (service-extension shepherd-root-service-type
+                             puzzle-draw-shepherd-service)
+          (service-extension account-service-type
+                             (const %puzzle-draw-accounts))))
+   (default-value (puzzle-draw-configuration))))</code></pre>
+<p>This references a couple of things. The <code>puzzle-draw-configuration</code> in this case is pure boilerplate, that’s used to pass in our base Guix package <code>puzzle-draw-frontend</code> while allowing it to be overridden:</p>
+<pre><code>(define-record-type* &lt;puzzle-draw-configuration&gt;
+  puzzle-draw-configuration make-puzzle-draw-configuration
+  puzzle-draw-configuration?
+  (puzzle-draw puzzle-draw-configuration-puzzle-draw (default puzzle-draw-frontend)))</code></pre>
+<p>Other than that, there are two “service extensions”; these are defined as functions that take the service configuration and return a suitable “extension” of the given service type. In the case of <code>account-service-type</code>, that’s just a list of groups and accounts that doesn’t care about the configuration (whence <code>const</code>):</p>
+<pre><code>(define %puzzle-draw-accounts
+  (list (user-group (name &quot;pzldraw&quot;) (system? #t))
+        (user-account
+         (name &quot;pzldraw&quot;)
+         (group &quot;pzldraw&quot;)
+         (system? #t)
+         (comment &quot;puzzle-draw server user&quot;)
+         (home-directory &quot;/var/empty&quot;)
+         (shell (file-append shadow &quot;/sbin/nologin&quot;)))))</code></pre>
+<p>This sets up a dedicated for the puzzle-draw daemon; we could easily have skipped that part and run things as an existing user below.</p>
+<p>The other extension is to <code>shepherd-service-type</code>:</p>
+<pre><code>(define puzzle-draw-shepherd-service
+  (match-lambda
+    (($ &lt;puzzle-draw-configuration&gt; puzzle-draw-frontend)
+     (list (shepherd-service
+            (provision '(puzzle-draw))
+            (documentation &quot;Run the puzzle-draw daemon.&quot;)
+            (requirement '(user-processes))
+            (start #~(make-forkexec-constructor
+                      '(#$(logger-wrapper &quot;puzzle-draw&quot; (file-append puzzle-draw-frontend &quot;/bin/servepuzzle&quot;)
+                                          &quot;-b&quot; &quot;127.0.0.1&quot; &quot;-p&quot; &quot;8765&quot;))
+                      #:user &quot;pzldraw&quot;
+                      #:group &quot;pzldraw&quot;))
+            (stop #~(make-kill-destructor)))))))</code></pre>
+<p>This is mostly just us telling shepherd to run the <code>servepuzzle</code> executable, whose path we obtain from the <code>puzzle-draw-frontend</code> field in the configuration.</p>
+<aside>
+There’s something interesting happening with <code>puzzle-draw-frontend</code> here: Originally, we defined it as a Guix package expression. However, when a package moves to the build-side of things, it turns into a path in the store; I believe this is the core of what’s called “lowering” in the definition of a build system, as we encountered in <a href="guix-elm-2.html">part 2</a>. Check out the documentation on <a href="https://guix.gnu.org/manual/en/guix.html#G_002dExpressions">G-expressions</a> for a more informed discussion of this.
+</aside>
+<p>There’s one extra change we made here, namely wrapping the executable with logger:</p>
+<pre><code>(define* (logger-wrapper name exec . args)
+  &quot;Return a derivation that builds a script to start a process with
+standard output and error redirected to syslog via logger.&quot;
+  (define exp
+    #~(begin
+        (use-modules (ice-9 popen))
+        (let* ((pid    (number-&gt;string (getpid)))
+               (logger #$(file-append inetutils &quot;/bin/logger&quot;))
+               (args   (list &quot;-t&quot; #$name (string-append &quot;--id=&quot; pid)))
+               (pipe   (apply open-pipe* OPEN_WRITE logger args)))
+          (dup pipe 1)
+          (dup pipe 2)
+          (execl #$exec #$exec #$@args))))
+  (program-file (string-append name &quot;-logger&quot;) exp))</code></pre>
+<p>This is required because, by default, <a href="https://debbugs.gnu.org/cgi/bugreport.cgi?bug=36264">Shepherd is happy</a> to let its child processes dump their output to Shepherd’s <code>stdout</code>, i.e. the console, where it will never be seen. Note that the <code>#~(begin</code>, <code>#$</code>, <code>#$@</code> magic here is the G-expressions version of Scheme quasiquoting, allowing us to mix host and target code.</p>
+<h1 id="configuring-the-system">Configuring the system</h1>
+<p>Now to bring our new service live. Our Guix system is defined by an <code>operating-system</code> record which comes with a list of services:</p>
+<pre><code>(operating-system
+  (host-name &quot;garp&quot;)
+  (timezone &quot;Europe/Berlin&quot;)
+  (locale &quot;en_US.utf8&quot;)
+  ...
+  (services
+   (append
+    (list
+     (static-networking-service &quot;eth0&quot; ...)
+     (service openssh-service-type ...)
+     ...)
+    %base-services)))</code></pre>
+<p>To set up nginx and puzzle-draw, we add two services:</p>
+<pre><code>     (service openssh-service-type ...)
+     (service nginx-service-type
+              (nginx-configuration
+               (extra-content
+                #~(string-append
+                   (string-append &quot;    include &quot; #$(local-file &quot;nginx/garp&quot;) &quot;;\n&quot;)))))
+     (service puzzle-draw-service-type)
+     ...</code></pre>
+<p>The nginx include directive allows us to write a plain nginx fragment, rather than do everything in Guile. Here’s <code>nginx/garp</code>:</p>
+<pre><code>server {
+        listen 443 ssl default_server;
+        listen [::]:443 ssl default_server;
+        server_name garp.vllmrt.net;
+        ssl_certificate /etc/letsencrypt/live/garp.vllmrt.net/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/garp.vllmrt.net/privkey.pem;
+
+        ...
+
+        location /puzzles/draw/ {
+                proxy_pass http://127.0.0.1:8765/;
+        }
+}</code></pre>
+<aside>
+I can’t find the documentation of this right now, but the way Guix System integrates certbot/letsencrypt with nginx is pretty neat. It automatically hooks in an nginx service extension, serving the relevant <code>.well-known</code> path over HTTP and redirecting to HTTPS.
+</aside>
+<p>Ideally, we’d template this fragment somehow so we don’t have to hard-code the port number in two places, but this works for now.</p>
+<p>Finally, we can reconfigure the system:</p>
+<pre><code>$ sudo guix system reconfigure config.scm
+$ sudo herd restart nginx</code></pre>
+<aside>
+<p>Reconfiguring the system will automatically start new services, such as <code>puzzle-draw</code>. On the other hand, since I was already running nginx, I had to restart it to pick up the updated configuration (not just tell it to reload its config, the path changed!).</p>
+The whole reconfiguration story is a bit of a mess: If I found out I made a mistake and wanted to roll back, the quickest would be to manually undo the change in the configuration and call <code>guix system reconfigure</code> again. <code>guix system roll-back</code> <a href="https://debbugs.gnu.org/cgi/bugreport.cgi?bug=36855">won’t pick up the old service setup without a reboot</a>.
+</aside>
+<p>Done! <a href="https://garp.vllmrt.net/puzzles/draw/">Draw some puzzles</a>!</p>
+</article>
+
+        </main>
+    </body>
+</html>

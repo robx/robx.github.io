@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Guix and Elm, part 1: Packaging the Elm compiler</title>
+        <link rel="stylesheet" href="../../css/default.css" />
+    </head>
+    <body>
+        <main role="main">
+            <h1>Guix and Elm, part 1: Packaging the Elm compiler</h1>
+            <article>
+    <section class="header">
+        <time>November 27, 2019</time>
+        
+        
+    </section>
+    <p>A few months ago, I converted a server I’m administering to run <a href="https://guix.gnu.org">Guix System</a>. I wouldn’t recommend you do the same at this point (the subject of a long and tragic story yet to be told), but I did learn a lot along the way; in particular, how to get an <a href="https://elm-lang.org">Elm</a> web app built and up and running, which I want to talk about here.</p>
+<p>Aims:</p>
+<ul>
+<li>document the state of my Elm packaging work, so others can build on it</li>
+<li>show how to bypass Elm’s “highly opinionated” packaging infrastructure</li>
+<li>provide an introduction to guix packaging</li>
+</ul>
+<p>I’ve split this into a series of articles:</p>
+<ol type="1">
+<li>packaging the Elm compiler</li>
+<li><a href="guix-elm-2.html">developing Guix infrastructure for building Elm apps, and using this to package the Elm reactor, and the full Elm tool</a></li>
+<li><a href="guix-elm-3.html">deploying an Elm web application on Guix System</a></li>
+</ol>
+<p>In this first part, we’ll go over the Guix packaging of the Elm compiler proper, a Haskell project. This work has already made it to Guix upstream:</p>
+<pre><code>$ guix package --show=elm-compiler
+name: elm-compiler
+version: 0.19.0
+outputs: out
+systems: x86_64-linux i686-linux
+dependencies: ghc-ansi-terminal@0.8.0.4 ghc-ansi-wl-pprint@0.6.8.2 ghc-edit-distance@0.2.2.1
++ ghc-file-embed@0.0.10.1 ghc-http-client-tls@0.3.5.3 ghc-http-client@0.5.13.1 ghc-http-types@0.12.3
++ ghc-http@4000.3.12 ghc-language-glsl@0.3.0 ghc-logict@0.6.0.2 ghc-network@2.6.3.6
++ ghc-raw-strings-qq@1.1 ghc-scientific@0.3.6.2 ghc-sha@1.6.4.4 ghc-snap-core@1.0.3.2
++ ghc-snap-server@1.1.0.0 ghc-unordered-containers@0.2.9.0 ghc-utf8-string@1.0.1.1 ghc-vector@0.12.0.1
++ ghc-zip-archive@0.3.3
+location: gnu/packages/elm.scm:40:2
+homepage: https://elm-lang.org
+license: Modified BSD
+synopsis: The `elm' command line interface, without {elm reactor  
+description: This includes commands like `elm make', `elm repl', and many others for helping make Elm
++ developers happy and productive.</code></pre>
+<h1 id="an-overview-of-elm-tooling">An overview of Elm tooling</h1>
+<p>The <a href="https://guide.elm-lang.org/install/elm.html"><code>elm</code> tool</a> (sources at <a href="https://github.com/elm/compiler">github.com/elm/compiler</a>) is a command line program that provides a variety of subcommands related to building Elm applications. It’s written in Haskell, and our first step will be to build this tool with Guix (or enough of this tool to be able to run <code>elm make</code> successfully). The sources are at [github.com/elm</p>
+<aside>
+The packaging here is for the 0.19.0 version of Elm. In the meantime, a bugfix release 0.19.1 has been released.
+</aside>
+<aside>
+To avoid some problems with the upstream 0.19.0 release, I initially based the packaging off the <a href="https://github.com/CurrySoftware/compiler">CurrySoftware fork</a>, which is where I found some of the patches that we’ll apply to the elm sources below.
+</aside>
+<p>It will be useful below to have a rough idea of how the <code>elm</code> tool works. Elm projects come in two forms: packages and applications. Packages are distributed via <a href="https://package.elm-lang.org">package.elm-lang.org</a>, and can be used as libraries from other packages and applications. Applications on the other hand are the “end product”, compiling to Javascript to be served to a web browser.</p>
+<p>Both such projects are defined by a file <code>elm.json</code>. The <code>elm</code> tool is then run from a directory containing such a file. It provides a couple of commands; the relevant ones for us are:</p>
+<dl>
+<dt><code>elm make</code></dt>
+<dd><p>Download package dependencies to <code>~/.elm</code> from package.elm-lang.org. Compile dependencies within <code>~/.elm</code> to an internal format. Compile Elm modules within <code>./elm-stuff</code> to the internal format. If this is an application, compile the internal format to Javascript.</p>
+</dd>
+<dt><code>elm reactor</code></dt>
+<dd><p>This serves a web app to interactively debug your Elm application. It is itself implemented as an Elm application.</p>
+</dd>
+</dl>
+<p>We’ll face issues with both of these: <code>elm make</code>’s all-in-one design is great for ease of use if you’re doing things the way they’re meant to be done. But when building in a sandboxed environment without internet access, we’ll need to trick it to believe it actually built its package database by talking to package.elm-lang.org. Then it’ll grudgingly fall back to an offline mode and work for us.</p>
+<p>Concretely, we’ll construct a package database in <code>~/.elm/0.19.0/package/</code> by unpacking dependency sources there and generating a <code>versions.dat</code> database.</p>
+<p>The issue with <code>elm reactor</code> isn’t with its use, but with its build: Since it is in Elm application itself, we need to have <code>elm make</code> (or its logic) available to build it. The clean way to do this is with a two-stage build, where we first build the Elm compiler, then use it to build the Elm reactor. Which is all good, except the upstream build solves this is a different and rather hacky way: It calls out to itself via Template Haskell, generating the web application Javascript during the build of the <code>elm</code> tool.</p>
+<p>This one we’ll address by tearing the build apart: In a first stage, we’ll patch out the reactor and build a version of the <code>elm</code> tool that primarily supports <code>elm make</code>. In a second stage we’ll re-enable the reactor, providing Javascript files built using the first stage <code>elm make</code> tool.</p>
+<aside>
+Nix deals with both of these issues in a different way. See <a href="guix-elm-2.html">part 2</a> for a brief comparison.
+</aside>
+<h1 id="packaging-the-elm-compiler-minus-reactor">Packaging the elm compiler (minus reactor)</h1>
+<p>The steps we’ll follow to package <code>elm make</code> are:</p>
+<ol type="1">
+<li>make sure the Haskell project builds with stack and the right LTS version</li>
+<li>generate a package definition using <code>guix import hackage -s &lt; elm.cabal</code></li>
+<li>import unpackaged Haskell dependencies</li>
+<li>replace the source field to refer to the github release</li>
+<li>apply patches</li>
+</ol>
+<p>We’ll go through this process explicitly below, not least to share the pain inherent in Guix packaging work.</p>
+<p>The first step is easy enough. I found things built fine with a GHC 8.4 stackage release after applying the patch <a href="http://git.savannah.gnu.org/cgit/guix.git/plain/gnu/packages/patches/elm-compiler-relax-glsl-bound.patch">elm-compiler-relax-glsl-bound.patch</a> to relax version bounds.</p>
+<p><code>guix import hackage</code> converts a cabal file into an expression of the form</p>
+<pre><code>(package
+  (name &quot;ghc-elm&quot;)
+  (version &quot;0.19.0&quot;)
+  (source
+    (origin
+      (method url-fetch)
+      (uri (string-append
+             &quot;https://hackage.haskell.org/package/elm/elm-&quot;
+             version
+             &quot;.tar.gz&quot;))
+      (sha256
+        (base32 &quot;failed to download tar archive&quot;))))
+  (build-system haskell-build-system)
+  (inputs
+   `((&quot;ghc-ansi-terminal&quot; ,ghc-ansi-terminal)
+     ...
+     (&quot;ghc-zip-archive&quot; ,ghc-zip-archive)))
+  (home-page &quot;https://elm-lang.org&quot;)
+  (synopsis &quot;The `elm` command line interface&quot;)
+  (description
+   &quot;This includes commands like `elm make`, `elm repl`, and many others
+for helping make Elm developers happy and productive.&quot;)
+  (license bsd-3))</code></pre>
+<p>This is a <a href="https://www.gnu.org/software/guile/manual/html_node/Record-Overview.html">scheme record</a>, with a number of named fields. The important ones are</p>
+<dl>
+<dt><code>source</code></dt>
+<dd><p>This declares the package source archive.</p>
+</dd>
+<dt><code>inputs</code></dt>
+<dd><p>This declares a list of dependencies. Typically, those are other packages.</p>
+</dd>
+<dt><code>build-system</code></dt>
+<dd><p>This declares the build system that’s used. It’s pretty much up to the build system to define what the source and input fields actually are.</p>
+</dd>
+</dl>
+<p>The dependencies in <code>inputs</code> are given as an association list of pairs <code>("package-name" ,package)</code>, where the name appears to be mostly irrelevant, while the package itself is a package record like we’re defining.</p>
+<aside>
+<p>Not knowing Scheme well before, I thought the comma was part of tuple syntax. Instead, it’s part of Scheme syntax for defining data that’s a mix of literal and evaluated data: <a href="https://www.gnu.org/software/guile/manual/html_node/Expression-Syntax.html#index-quasiquote">quasiquote</a>.</p>
+When starting out with Guix, it’s tempting (and mostly fine) to do things by copy-and-pasting existing package definitions, but what with the sorry state of Guile error messages, there’s really no way around learning the language.
+</aside>
+<p>Let’s try to build this package definition: We’ll write it to a file called <code>elm.scm</code>, and call <code>guix build</code>:</p>
+<pre><code>$ guix build -f elm.scm
+ice-9/eval.scm:223:20: In procedure proc:
+error: package: unbound variable
+hint: Did you forget `(use-modules (guix packages))'?</code></pre>
+<p>Indeed, putting the hinted line at the top of the file helps.</p>
+<aside>
+The Guile module <code>(guix packages)</code> is defined in <code>guix/packages.scm</code> within the <a href="http://git.savannah.gnu.org/cgit/guix.git">guix</a> git repository. Generally, the guix tooling itself and packaging infrastructure is defined within <code>guix/</code>, while the packages themselves are defined under <code>gnu/</code>.
+</aside>
+<p>The next failure relates to the broken source field:</p>
+<pre><code>$ guix build -f elm.scm
+guix build: error: exception thrown: #&lt;condition &amp;invalid-base32-character [character: #\e string: &quot;failed to download tar archive&quot;] 29c9f00&gt;</code></pre>
+<p>Unsurprisingly, <code>"failed to download tar archive"</code> isn’t a valid base32 hash. This happened because <code>elm</code> isn’t actually published on <a href="https://hackage.haskell.org">Hackage</a>, so `guix import failed to download the source archive and compute a hash. To fix this, we edit the file to refer to a correct URI for the elm compiler sources, put in some arbitray valid hash copied from another package definition, and eventually fix the hash to the correct version.</p>
+<pre><code>$ guix build -f elm.scm
+ice-9/eval.scm:223:20: In procedure proc:
+error: url-fetch: unbound variable
+hint: Did you forget `(use-modules (guix build download))'?</code></pre>
+<p>Well, not “forget” as such, but indeed: adding the import gets us further.</p>
+<pre><code>$ guix build -f elm.scm
+ice-9/eval.scm:223:20: In procedure proc:
+error: haskell-build-system: unbound variable
+hint: Did you forget a `use-modules' form?</code></pre>
+<p>Yes, we also need <code>(use-modules (guix build-system haskell))</code>.</p>
+<pre><code>$ guix build -f elm.scm
+ice-9/eval.scm:223:20: In procedure proc:
+error: bsd-3: unbound variable
+hint: Did you forget `(use-modules (guix licenses))'?</code></pre>
+<p>Oh no. We did.</p>
+<pre><code>$ guix build -f elm.scm
+/home/rob/blog-test/elm.scm:17:3: In procedure inputs:
+error: ghc-ansi-terminal: unbound variable
+hint: Did you forget a `use-modules' form?</code></pre>
+<p>Oh, our dependencies aren’t yet imported. We can find this one:</p>
+<pre><code>$ guix search ghc-ansi-terminal
+name: ghc-ansi-terminal
+version: 0.8.0.4
+outputs: out
+systems: x86_64-linux i686-linux
+dependencies: ghc-colour@2.3.4
+location: gnu/packages/haskell-xyz.scm:288:2
+homepage: https://github.com/feuerbach/ansi-terminal
+license: Modified BSD
+synopsis: ANSI terminal support for Haskell  
+description: This package provides ANSI terminal support for Haskell.  It allows cursor movement, screen clearing, color
++ output showing or hiding the cursor, and changing the title.
+relevance: 20</code></pre>
+<p>It’s defined in the module <code>(gnu packages haskell-xyz)</code>, so we’ll add an import for that. There’s a few more similar missing imports, which we fix by also importing <code>(gnu packages haskell-check)</code> and <code>(gnu packages haskell-web)</code>.</p>
+<aside>
+The Elm dependencies have by now all been packaged, but usually at this point you’d expect to find a few libraries that are still missing. Then we’d have to package those first. <code>guix import</code> has a recursive mode that can help with this.
+</aside>
+<pre><code>$ guix build -f elm.scm
+Backtrace:
+In guix/store.scm:
+   623:10 19 (call-with-store _)
+In guix/scripts/build.scm:
+   914:26 18 (_ #&lt;store-connection 256.99 e32ae0&gt;)
+In ice-9/boot-9.scm:
+    829:9 17 (catch _ _ #&lt;procedure 1bf1800 at ice-9/boot-9.scm:104…&gt; …)
+In guix/ui.scm:
+    415:6 16 (_)
+In guix/scripts/build.scm:
+    879:5 15 (_)
+In srfi/srfi-1.scm:
+   679:15 14 (append-map _ _ . _)
+   592:17 13 (map1 (&quot;x86_64-linux&quot;))
+   679:15 12 (append-map _ _ . _)
+   592:17 11 (map1 (#&lt;package elm@0.19.0 /home/rob/blog-test/elm.sc…&gt;))
+In guix/scripts/build.scm:
+   840:18 10 (_ _)
+In guix/packages.scm:
+   936:16  9 (cache! #&lt;weak-table 358/443&gt; #&lt;package elm@0.19.0 /ho…&gt; …)
+  1255:22  8 (thunk)
+  1188:25  7 (bag-&gt;derivation #&lt;store-connection 256.99 e32ae0&gt; #&lt;&lt;…&gt; …)
+In srfi/srfi-1.scm:
+   592:29  6 (map1 ((&quot;haskell&quot; #&lt;package ghc@8.4.3 gnu/packages…&gt;) …))
+   592:17  5 (map1 ((&quot;source&quot; #&lt;origin &quot;https://github.com/elm/…&gt;) …))
+In ice-9/boot-9.scm:
+    829:9  4 (catch srfi-34 #&lt;procedure 3743870 at guix/packages.sc…&gt; …)
+In guix/packages.scm:
+  1003:18  3 (_)
+In guix/store.scm:
+  1803:24  2 (run-with-store #&lt;store-connection 256.99 e32ae0&gt; _ # _ …)
+  1673:13  1 (_ _)
+In guix/build/download.scm:
+    741:0  0 (url-fetch _ _ #:timeout _ #:verify-certificate? _ # _ # …)
+
+guix/build/download.scm:741:0: In procedure url-fetch:
+Invalid keyword: #vu8(73 77 243 55 36 34 67 7 214 226 180 208 179 66 68 140 201 39 144 20 131 56 78 228 248 207 238 44 179 142 153 60)</code></pre>
+<p>Oops. I’ve never seen this error before going through these steps again while writing the article. It <a href="https://lists.gnu.org/archive/html/guix-devel/2019-11/msg00332.html">turns out</a> that the helpful hint to import <code>(guix build download)</code> was misleading: We want to import the <code>url-fetch</code> from <code>(guix download)</code> instead.</p>
+<pre><code>$ guix build -f elm.scm
+[...]
+downloading from https://github.com/elm/compiler/archive/0.19.0.tar.gz...
+ 0.19.0.tar.gz                                                                               608KiB/s 00:01 | 439KiB transferred
+sha256 hash mismatch for /gnu/store/pcxygjzvmals9yramliz2bzznz1lh9i1-elm-0.19.0.tar.gz:
+  expected hash: 1111111111111111111111111111111111111111111111111111
+  actual hash:   0g4risrjrvngz3j4wf432j82gjcc8i1b7l5lwbb0fhr24hvz6ka9
+hash mismatch for store item '/gnu/store/pcxygjzvmals9yramliz2bzznz1lh9i1-elm-0.19.0.tar.gz'
+[...]</code></pre>
+<p>Progress! We copy and paste the actual hash into <code>elm.scm</code>, and we’re actually trying to build. Though as expected, we run into trouble in the Haskell configure phase:</p>
+<pre><code>$ guix build -f elm.scm
+[...]
+starting phase `configure'
+running &quot;runhaskell Setup.hs&quot; with command &quot;configure&quot; [...]
+[...]
+Configuring elm-0.19.0...
+Setup.hs: Encountered missing dependencies:
+language-glsl &gt;=0.0.2 &amp;&amp; &lt;0.3
+[...]</code></pre>
+<p>This is where we need to apply the patch <code>elm-compiler-relax-glsl-bound.patch</code>. We store it in the current directory, and add it to the source definition:</p>
+<pre><code>  (source
+    (origin
+      (method url-fetch)
+      (file-name &quot;elm-0.19.0.tar.gz&quot;)
+      (uri &quot;https://github.com/elm/compiler/archive/0.19.0.tar.gz&quot;)
+      (sha256
+        (base32 &quot;0g4risrjrvngz3j4wf432j82gjcc8i1b7l5lwbb0fhr24hvz6ka9&quot;))
+      (patches
+       `(&quot;elm-compiler-relax-glsl-bound.patch&quot;))))</code></pre>
+<pre><code>$ guix build -f elm.scm
+[...]
+ui/terminal/src/Develop/StaticFiles.hs:92:3: error:
+    • Exception when trying to run compile-time code:
+        /homeless-shelter: createDirectory: permission denied (Permission denied)
+      Code: bsToExp =&lt;&lt; runIO Build.compile
+    • In the untyped splice: $(bsToExp =&lt;&lt; runIO Build.compile)
+   |
+92 |   $(bsToExp =&lt;&lt; runIO Build.compile)
+   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[...]</code></pre>
+<p>Finally, we run into trouble with the convoluted Elm build: It’s trying to run the compiler itself while building, which tries to write to <code>$HOME</code>, which is read-only inside the guix sandbox. (We could get around this by providing a writable home directory, but then we’d fail soon after when it tries to access the network.)</p>
+<p>We fix this by adding another patch, <a href="http://git.savannah.gnu.org/cgit/guix.git/plain/gnu/packages/patches/elm-compiler-disable-reactor.patch">elm-compiler-disable-reactor.patch</a>.</p>
+<pre><code>$ guix build -f elm.scm
+[...]
+successfully built /gnu/store/8xn1irs377mk6n17bcrxr293qpzr6224-ghc-elm-0.19.0.drv
+/gnu/store/542im7drgr0p37ymaiqkh31k5ff4ghaj-ghc-elm-0.19.0
+$ /gnu/store/542im7drgr0p37ymaiqkh31k5ff4ghaj-ghc-elm-0.19.0/bin/elm
+Hi, thank you for trying out Elm 0.19.0. I, Evan, hope you like it!
+[...]</code></pre>
+<p>Success! Wrapping this up as a package for Guix upstream requires a little bit more work:</p>
+<ul>
+<li>Bind the package definition to a name, and place it in a module within the <code>(gnu packages)</code> hierarchy.</li>
+<li>Move the patches to <code>gnu/packages/patches/</code>, and add the files to the list in <code>gnu/local.mk</code>.</li>
+<li>Rewrite the <code>guix import</code>-generated synopsis and description to fit the Guix style and markup format.</li>
+</ul>
+<p>You can look at the complete patch <a href="http://git.savannah.gnu.org/cgit/guix.git/commit/?id=c902458863d1d341ffd74970b75e69c2bb848183">in the guix repository</a>.</p>
+<p>In the <a href="guix-elm-2.html">next article</a>, we’ll see how to use the Elm compiler within Guix to package Elm applications.</p>
+</article>
+
+        </main>
+    </body>
+</html>

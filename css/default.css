@@ -37,9 +37,22 @@ time {
 }
 aside {
   font-style: italic;
+  margin-top: 16px;
   margin-left: 4ch;
   margin-right: 4ch;
   font-size: smaller;
+}
+aside + aside {
+  margin-top: 0px;
+}
+aside + aside::before {
+  content: '';
+  display: block;
+  margin-top: 12px;
+  margin-left: 4ch;
+  margin-right: 4ch;
+  padding-top: 12px;
+  border-top: solid gray 1px;
 }
 pre {
   overflow: scroll;

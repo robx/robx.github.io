@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Guix and Elm, part 2: An Elm build system</title>
+        <link rel="stylesheet" href="../../css/default.css" />
+    </head>
+    <body>
+        <main role="main">
+            <h1>Guix and Elm, part 2: An Elm build system</h1>
+            <article>
+    <section class="header">
+        <time>November 27, 2019</time>
+        
+        
+    </section>
+    <p>This is the second in a series of articles on working with Elm in Guix. See the <a href="guix-elm-1.html">first article</a> for an introduction. The outline is:</p>
+<ol type="1">
+<li><a href="guix-elm-1.html">packaging the Elm compiler</a></li>
+<li>developing Guix infrastructure for building Elm apps, and using this to package the Elm reactor, and the full Elm tool</li>
+<li><a href="guix-elm-3.html">deploying an Elm web application on Guix System</a></li>
+</ol>
+<p>In part 1, we succeeded in packaging the Elm compiler. We now have the <code>elm</code> tool available, and can use it to build an Elm application from the command line. I’ll use a small Elm app of mine for demonstration purposes, the web interface to <a href="https://github.com/robx/puzzle-draw">puzzle-draw</a>.</p>
+<aside>
+puzzle-draw is a tool for generating pencil puzzle graphics, written in Haskell. I wrote a web frontend for it in Elm; the source can be found in the subdirectory <a href="https://github.com/robx/puzzle-draw/tree/master/web"><code>puzzle-draw/web</code></a>, and it’s presently hosted at <a href="https://garp.vllmrt.net/puzzles/draw">garp.vllmrt.net/puzzles/draw</a>.
+</aside>
+<p>In this article, we’ll develop Guix tooling to allow us to package and build this web app, and to package the full <code>elm</code> tool including the reactor. You can find the code in the last couple of commits of the <code>elm</code> branch here: <a href="https://github.com/robx/guix/tree/elm/">github.com/robx/guix</a>.</p>
+<aside>
+It’s going to get pretty technical, and I won’t be going into as much detail as in part 1. In a similar vein, the code gets a bit messy, because at some point there’s just <em>so much</em> to do that I ran out of will to figure out clean ways to do things. Hopefully, this article might at least show what kind of experience to expect if you try something like this at home.
+</aside>
+<h1 id="building-the-application-without-guix">Building the application without Guix</h1>
+<p>To begin, let’s have a look at what happens when we build the application from the command line. We’ll start by wiping out Elm’s package cache.</p>
+<pre><code>$ rm -rf ~/.elm
+$ git clone https://github.com/robx/puzzle-draw.git &amp;&amp; cd puzzle-draw/web
+$ elm make --output=../static/web.js src/Main.elm
+Starting downloads...
+
+  ● elm/time 1.0.0
+  ● elm/json 1.0.0
+  ● elm/url 1.0.0
+  ● elm/browser 1.0.0
+  ● elm/virtual-dom 1.0.0
+  ● elm/html 1.0.0
+  ● elm/core 1.0.0
+  ● elm/http 1.0.0
+
+Dependencies ready!                
+Success! Compiled 1 module.                                          </code></pre>
+<p>So <code>elm make</code> can successfully build our application, based on the definition in <code>elm.json</code>:</p>
+<pre><code>$ cat elm.json
+{
+    &quot;type&quot;: &quot;application&quot;,
+    &quot;source-directories&quot;: [
+        &quot;src&quot;
+    ],
+    &quot;elm-version&quot;: &quot;0.19.0&quot;,
+    &quot;dependencies&quot;: {
+        &quot;direct&quot;: {
+            &quot;elm/browser&quot;: &quot;1.0.0&quot;,
+            &quot;elm/core&quot;: &quot;1.0.0&quot;,
+            &quot;elm/html&quot;: &quot;1.0.0&quot;,
+            &quot;elm/http&quot;: &quot;1.0.0&quot;,
+            &quot;elm/json&quot;: &quot;1.0.0&quot;,
+            &quot;elm/url&quot;: &quot;1.0.0&quot;
+        },
+        &quot;indirect&quot;: {
+            &quot;elm/time&quot;: &quot;1.0.0&quot;,
+            &quot;elm/virtual-dom&quot;: &quot;1.0.0&quot;
+        }
+    },
+    &quot;test-dependencies&quot;: {
+        &quot;direct&quot;: {},
+        &quot;indirect&quot;: {}
+    }
+}</code></pre>
+<p>With an empty package database and missing <code>./elm-stuff</code>, <code>elm make</code> goes through:</p>
+<ol type="1">
+<li><p>Pull a database of available package versions from <code>package.elm-lang.org</code>, and write it to <code>~/.elm/0.19.0/package/versions.dat</code>.</p></li>
+<li><p>Download the dependency source packages from Github, and unpack them in <code>~/.elm</code> and update the package database:</p>
+<pre><code>$ find ~/.elm/ | grep elm/url
+~/.elm/0.19.0/package/elm/url
+~/.elm/0.19.0/package/elm/url/1.0.0
+~/.elm/0.19.0/package/elm/url/1.0.0/src
+~/.elm/0.19.0/package/elm/url/1.0.0/src/Url.elm
+[...]</code></pre></li>
+<li><p>Compile some auxiliary files from the dependency sources within <code>~/.elm</code>:</p>
+<pre><code>$ find ~/.elm/ | grep 'elm/url.*\.dat$'
+~/.elm/0.19.0/package/elm/url/1.0.0/ifaces.dat
+~/.elm/0.19.0/package/elm/url/1.0.0/cached.dat
+~/.elm/0.19.0/package/elm/url/1.0.0/objs.dat</code></pre></li>
+<li><p>Compile the application sources into <code>elm-stuff</code>:</p>
+<pre><code>$ find elm-stuff/
+elm-stuff/
+elm-stuff/0.19.0
+elm-stuff/0.19.0/summary.dat
+elm-stuff/0.19.0/Main.elmo
+elm-stuff/0.19.0/Main.elmi</code></pre></li>
+<li><p>Generate output Javascript.</p></li>
+</ol>
+<p>It’s only really steps 1 and 2 that are interesting for us here. We can happily let <code>elm make</code> do its stuff in steps 3-5 within the Guix sandbox.</p>
+<p>However, building for Guix, we can’t allow steps 1 and 2 as is both since they require network access, and since we need to explicitly provide all dependencies with hashes for a Guix package. Luckily, it turns out that <code>elm make</code> does work absent network access if <code>~/.elm</code> is in the right state. It needs:</p>
+<ul>
+<li>A valid <code>versions.dat</code> file that contains at least all the dependencies listed in our application’s <code>elm.json</code>.</li>
+<li>Unpacked source archives for the dependencies as listed above.</li>
+<li>An (empty) <code>elm-stuff</code> directory.</li>
+</ul>
+<h1 id="build-systems">Build systems</h1>
+<p>Every Guix package specifies a <a href="https://guix.gnu.org/manual/en/html_node/Build-Systems.html">build system</a>, which determines in pretty full generality how the package definition is converted into an output in the Guix store.</p>
+<p>In the Elm case, it makes sense to treat (Elm) packages and applications separately:</p>
+<ul>
+<li><p>We only need Elm packages to provide source files for application builds. Building an Elm package will simply amount to downloading and unpacking a source archive.</p></li>
+<li><p>For Elm applications, we want to call <code>elm make</code> to compile the Elm source files to Javascript.</p></li>
+</ul>
+<aside>
+It would be possible to make the Elm package build system compile the files that <code>elm make</code> generates within <code>~/.elm</code>, e.g. <code>~/.elm/0.19.0/package/elm/url/1.0.0/ifaces.dat</code>. These could then be reused to speed up builds of dependents.
+</aside>
+<p>Build systems consist of two parts: A core build script, which resides within <code>guix/build</code>. This is build-side code, executed within the Guix sandbox. In our case, this will be two functions <code>elm-package-build</code> and <code>elm-application-build</code>, defined in <a href="https://github.com/robx/guix/blob/elm/guix/build/elm-build-system.scm"><code>guix/build/elm-build-system.scm</code></a>.</p>
+<p>Then, there’s a bunch of user-side scaffolding, assembling build ingredients and passing them to the build side. In our case, this will primarily be two build-system records <code>elm-package-build-system</code> and <code>elm-application-build-system</code>, defined in <a href="https://github.com/robx/guix/blob/elm/guix/build-system/elm.scm"><code>guix/build-system/elm.scm</code></a>.</p>
+<aside>
+Not at all sure “user-side” is the best term here. I mean the Guile code that defines the packages and that’s part of the user-facing Guix tooling such as <code>guix package</code>.
+</aside>
+<aside>
+Guix’ build system zoo is a bit of a mess. There’s a base <code>trivial-build-system</code> which does nothing (not even know how to extract source archives). So almost all other build systems are based on <code>gnu-build-system</code>, which provides generally useful features (a notion of multiple build phases; unpacking source archives), but also wants to run a standard Gnu <code>configure; make; make install</code> build, pulling in dependencies that are unnecessary for other build styles. Some reorganization would be good here.
+</aside>
+<aside>
+Another issue with the build systems is that they don’t compose well. Here, we’ll define a build system that deals with compiling Elm sources. But typically, an Elm application will also come with some static HTML and CSS files – it would be great to be able to mix in a build system that deals with copying over static content. Instead, what we’ll have to do is define a package for the Elm compilation, and then a second package for the static content that receives the first package as an input. Compare <a href="guix-elm-3.html">part 3</a> of this series.
+</aside>
+<p>Here’s what an Elm-package-package might look like. <code>(build-system elm-package-build-system)</code> here tells Guix to use that build system.</p>
+<pre><code>(define-public elm-virtual-dom
+  (package
+    (name &quot;elm-virtual-dom&quot;)
+    (version &quot;1.0.0&quot;)
+    (source
+     (origin
+       (method url-fetch)
+       (uri (elm-package-uri &quot;elm/virtual-dom&quot; version))
+       (sha256
+        (base32
+         &quot;0hm8g92h7z39km325dlnhk8n00nlyjkqp3r3jppr37k2k13md6aq&quot;))))
+    (build-system elm-package-build-system)
+    (synopsis
+     &quot;Core virtual DOM implementation, basis for HTML and SVG libraries&quot;)
+    (description
+     &quot;Core virtual DOM implementation, basis for HTML and SVG libraries&quot;)
+    (home-page #f)
+    (license license:bsd-3)))</code></pre>
+<p>Below, we’ll go over the build side code in some detail, and skim the build system definition as such.</p>
+<h2 id="elm-package-build"><code>elm-package-build</code></h2>
+<p>The core of the package build system is the function <code>elm-package-build</code>, which simply unpacks the source archive, and copies it to the output path.</p>
+<p>The function is called with three arguments:</p>
+<dl>
+<dt><code>source</code></dt>
+<dd><p>A path to the source, as specified in the package definition.</p>
+</dd>
+<dt><code>inputs</code></dt>
+<dd><p>An association list mapping input names to paths. This includes the various explicit dependencies we could have listed in the package definition’s <code>input</code> fields, as well as dependencies specified by the build-system, such as the <code>tar</code> tool.</p>
+</dd>
+<dt><code>output</code></dt>
+<dd><p>A store path that we’re meant to write our result to.</p>
+</dd>
+</dl>
+<pre><code>(define (elm-package-build source inputs output)
+  (let ((tar (assoc-ref inputs &quot;tar&quot;))
+        (gzip (assoc-ref inputs &quot;gzip&quot;)))
+    (setenv &quot;PATH&quot; (string-append (getenv &quot;PATH&quot;) &quot;:&quot;
+                                  (string-append tar &quot;/bin&quot;) &quot;:&quot;
+                                  (string-append gzip &quot;/bin&quot;)))
+    (mkdir &quot;source&quot;)
+    (with-directory-excursion &quot;source&quot;
+      (invoke &quot;tar&quot; &quot;xzf&quot; source)
+      (let ((dir (car (scandir &quot;.&quot; (lambda (f) (&gt; (string-length f) 2))))))
+        (copy-recursively dir output)))))</code></pre>
+<h2 id="build-versions.dat"><code>build-versions.dat</code></h2>
+<p>A first ingredient that our application build system needs is way to generate the Elm package database <code>versions.dat</code>.</p>
+<p>To interact with it, <code>elm make</code> uses the Haskell <a href="https://hackage.haskell.org/package/binary">binary</a> package. The core of the relevant code can be found in <a href="https://github.com/elm/compiler/blob/0.19.0/compiler/src/Elm/Package.hs#L350"><code>Elm/Package.hs</code></a>. It’s a pretty straightforward encoding, we mostly have to ensure we order entries correctly matching the Haskell encoding of maps. Using the module <a href="https://www.gnu.org/software/guile/manual/html_node/Binary-I_002fO.html"><code>(ice-9 binary-ports)</code></a>, here’s an implementation.</p>
+<pre><code>(define* (put-packages port pkgs)
+  &quot;Writes an elm package database to PORT based on the
+list PKGS of packages. Each package should be a list
+of the form '(\&quot;elm\&quot; \&quot;core\&quot; (1 0 0)).&quot;
+
+  (define (put-int64 port x)
+    (let ((vec (make-bytevector 8)))
+      (bytevector-s64-set! vec 0 x (endianness big))
+      (put-bytevector port vec)))
+
+  (define (put-text port s)
+    (put-int64 port (string-length s)) ; this should be utf8 length, utf8
+    (put-string port s))
+
+  (define (put-version port v)
+    (map (cut put-u8 port &lt;&gt;) v)) ; there's a different encoding for very large versions
+
+  (define (put-package port pkg)
+    (match pkg
+      ((author project version)
+       (begin
+         (put-text port author)
+         (put-text port project)
+         (put-int64 port 1)
+         (put-version port version)))))
+
+  (put-int64 port (length pkgs)) ; total number of versions
+  (put-int64 port (length pkgs)) ; number of packages
+  (for-each
+   (cut put-package port &lt;&gt;) 
+   (sort pkgs (match-lambda*
+                (((auth1 proj1 _) (auth2 proj2 _))
+                 (or (string&lt;? auth1 auth2)
+                     (and (string=? auth1 auth2)
+                          (string&lt;? proj1 proj2))))))))</code></pre>
+<p>Using this, we can define a (hacky) function to build a <code>versions.dat</code> file that matches a package tree:</p>
+<pre><code>(define* (parse-version version)
+  &quot;Parse an elm package version from string to a list of
+integer components.&quot;
+  (map string-&gt;number (string-split version #\.)))
+
+(define* (build-versions.dat)
+  &quot;Build an elm package database in the file versions.dat
+in the current directory to match the existing unpacked elm
+modules.&quot;
+  (format #t &quot;building versions.dat in ~a~%&quot; (getcwd))
+  (let ((packages (string-split
+                   (get-line (open-input-pipe &quot;echo */*/*&quot;))
+                   #\ ))
+        (out (open-output-file &quot;versions.dat&quot;)))
+    (format #t &quot;packages: ~a~%&quot; packages)
+    (put-packages
+     out
+     (map
+      (lambda (path)
+        (match (string-split path #\/)
+          ((author project version)
+           (list author project (parse-version version)))))
+      packages))
+    (close out)))</code></pre>
+<h2 id="elm-application-build"><code>elm-application-build</code></h2>
+<p>The core of the Elm application build system is the function <code>elm-application-build</code>. We’ll walk through it now.</p>
+<pre><code>(define (elm-application-build source inputs output elm-modules)</code></pre>
+<p>The arguments to <code>elm-application-build</code> are like those for <code>elm-package-build</code> above, with two modifications: We’ll find that the source archive is redundantly available as an input with key “source” – I’m not sure if this is generally the case, and why we should be using this and not the <code>source</code> argument below, but there must have been a Good Reason.</p>
+<p>Then, we pass an extra argument <code>elm-modules</code> to determine how to call <code>elm make</code>. The default is <code>((("Main.elm") . "main.js"))</code>, stating that we want to generate one Javascript file <code>main.js</code> by compiling the Elm module <code>Main.elm</code>.</p>
+<aside>
+It’s a bit annoying to have to specify this information when defining a package. An alternative might be to instead call <code>make build</code> if there’s a <code>Makefile</code> in the source directory, and just copy out all <code>.js</code>-files.
+</aside>
+<pre><code>  (let ((elm (string-append (assoc-ref inputs &quot;elm-compiler&quot;) &quot;/bin/elm&quot;))
+        (deps &quot;.elm/0.19.0/package&quot;)
+        (tar (assoc-ref inputs &quot;tar&quot;))
+        (xz (assoc-ref inputs &quot;xz&quot;)))
+    (setenv &quot;PATH&quot; (string-append (getenv &quot;PATH&quot;) &quot;:&quot;
+                                  (string-append tar &quot;/bin&quot;) &quot;:&quot;
+                                  (string-append xz &quot;/bin&quot;)))</code></pre>
+<p>We start by setting some variables. In particular, we set up <code>$PATH</code> to allow the <code>unpack</code> function we copied from some other build system to work later on.</p>
+<pre><code>    (format #t &quot;collecting dependencies~%&quot;)
+    (mkdir-p deps)
+    (for-each
+      (match-lambda
+        ((n . pkg)
+         (when (and (string-prefix? &quot;elm-&quot; n)
+                    (not (equal? &quot;elm-compiler&quot; n)))
+           (match (elm-package-and-version pkg)
+             ((name . version)
+              (copy-recursively pkg
+                                (string-append deps &quot;/&quot; name &quot;/&quot; version)))))))
+      inputs)</code></pre>
+<p>Next we start setting up our package directory. We loop over all inputs, filtering for those that seem to be Elm packages. This is a terrible way to do things, but seems to be par for the course when comparing other build systems. A more reliable way might be to check whether there’s an <code>elm.json</code> file in the root directory of an input.</p>
+<p>By assumption, these inputs are unpacked source archives, which we copy to the correct place in <code>~/.elm/0.19.0/package</code>.</p>
+<pre><code>    (format #t &quot;generating versions.dat~%&quot;)
+    (with-directory-excursion deps (build-versions.dat))</code></pre>
+<p>With this done, we call out to our helper to generate a package database fitting the set of unpacked packages.</p>
+<pre><code>    (format #t &quot;setting up elm env: cwd=~a~%&quot; (getcwd))
+    (setenv &quot;HOME&quot; (getcwd))
+    (setenv &quot;HTTP_PROXY&quot; &quot;.&quot;)
+    (mkdir &quot;src&quot;) ; extra level of src directory because unpack uses the first subdir...
+    (with-directory-excursion &quot;src&quot;
+      (format #t &quot;extracting source~%&quot;)
+      (unpack #:source (assoc-ref inputs &quot;source&quot;)) ; changes directory
+      (mkdir &quot;elm-stuff&quot;)
+      (chmod &quot;elm-stuff&quot; #o775)</code></pre>
+<p>Now we set up things to trick <code>elm make</code> into happiness: We set <code>$HOME</code> to point at the package database we generated, set <code>$HTTP_PROXY</code> to cleanly break network access, unpack the source archive (in a bit of a messy way because that’s how <code>unpack</code> works, and finally generate an empty <code>elm-stuff</code> directory.</p>
+<pre><code>      (for-each
+        (match-lambda
+          ((srcs . dst)
+           (begin
+             (format #t &quot;building ~a from ~a~%&quot; dst srcs)
+             (apply invoke elm &quot;make&quot; (string-append &quot;--output=&quot; output &quot;/&quot; dst)
+                    (map (lambda (src) (string-append &quot;src/&quot; src)) srcs)))))
+        elm-modules))))</code></pre>
+<p>Finally, we loop over the <code>elm-modules</code> argument, calling <code>elm make</code> with target in the output directory.</p>
+<h2 id="the-build-systems-proper">The build systems proper</h2>
+<p>We define the two Elm build systems in <code>guix/build-system/elm.scm</code>:</p>
+<pre><code>(define elm-package-build-system
+  (build-system
+    (name 'elm-package)
+    (description
+     &quot;Elm package build system, merely unpacking the source archive.&quot;)
+    (lower lower-package)))
+
+(define elm-application-build-system
+  (build-system
+    (name 'elm-application)
+    (description
+     &quot;Elm application build system.&quot;)
+    (lower lower-application)))</code></pre>
+<p>The rest of the file is more or less boiler plate, to pass between the user-side and the build-side code. There’s some hope this will become cleaner once the build systems are converted to use <a href>G-expressions</a>. For the moment it didn’t seem worthwhile really trying to understand this part; I was content to get it to work.</p>
+<p>Here’s the implementation of <code>lower-application</code>:</p>
+<pre><code>(define* (lower-application name
+                #:key source inputs native-inputs outputs system target
+                guile builder modules allowed-references
+                (elm-modules '(((&quot;Main.elm&quot;) . &quot;main.js&quot;))))
+  &quot;Return a bag for NAME.&quot;
+  (bag
+    (name name)
+    (system system)
+    (target target)
+    (host-inputs `(,@(if source
+                         `((&quot;source&quot; ,source))
+                         '())
+                   (&quot;elm-compiler&quot; ,(elm-compiler))
+                   ,@inputs
+                   ,@(gnu:standard-packages)))
+    (build-inputs `(,@native-inputs))
+    (outputs outputs)
+    (build elm-application-build)
+    (arguments `(#:guile ,guile
+                 #:modules ,modules
+                 #:elm-modules ,elm-modules
+                 #:allowed-references ,allowed-references))))</code></pre>
+<p>I don’t understand this well enough to explain everything; important parts are:</p>
+<ul>
+<li><p>We pass in the Elm compiler itself as an input, so it’ll be available to <code>elm-application-build</code>.</p></li>
+<li><p>We pass through the <code>elm-modules</code> argument, allowing it to be specified as a package argument like this:</p>
+<pre><code>(package
+  ...
+  (build-system elm-application-build-system)
+  (arguments
+    `(#:elm-modules (((&quot;Main.elm&quot;) . &quot;main.js&quot;))))
+  ...)</code></pre></li>
+</ul>
+<h1 id="an-elm-application-importer">An Elm application importer</h1>
+<p>At this point we could write Elm package definitions by hand. However, that’s a bit unwieldy, so I went on and implemented <code>guix import elm</code>, which takes an <code>elm.json</code> file and generates a package definition.</p>
+<p>The core of the importer is defined in <code>guix/import/elm.scm</code>, with some helper code in <code>guix/scripts/import/elm.scm</code> to deal with the command line interface. The gist of the code is:</p>
+<ul>
+<li>Parse an <code>elm.json</code> file (<code>elm.json-&gt;guix-package</code>).</li>
+<li>If it’s an Elm package, just assemble (<code>make-elm-package-sexp</code>) the <code>elm.json</code> fields into a Guix package, together with URL and hash of the source archive.</li>
+<li>Else, collect the list of dependencies, and recurse to assemble each of those into a local package definition as above, and then assemble it into a Guix package definition.</li>
+</ul>
+<p>Here’s an extract of the code:</p>
+<pre><code>(define (make-elm-package-sexp name version summary license)
+  `(package
+     (name ,(elm-package-name name))
+     (version ,version)
+     (source (origin
+               (method url-fetch)
+               (uri (elm-package-uri ,name version))
+               (sha256
+                (base32
+                 ,(guix-hash-url (elm-package-uri name version))))))
+     (build-system elm-package-build-system)
+     (synopsis ,summary)
+     (description ,summary)
+     (home-page #f)
+     (license ,(spdx-string-&gt;license license))))
+
+(define (elm.json-&gt;guix-package elm.json)
+  &quot;Read package metadata from the given ELM.JSON file, and return
+the `package' s-expression corresponding to that package.&quot;
+  (let ((type    (assoc-ref elm.json &quot;type&quot;)))
+    (cond
+      ((equal? type &quot;package&quot;)
+         (let* ((name    (assoc-ref elm.json &quot;name&quot;))
+                (version (assoc-ref elm.json &quot;version&quot;))
+                (license (assoc-ref elm.json &quot;license&quot;))
+                (summary (assoc-ref elm.json &quot;summary&quot;)))
+           (make-elm-package-sexp name version summary license)))
+      ((equal? type &quot;application&quot;)
+         (make-elm-app-sexp
+           (map (match-lambda ((name . version)
+                               `(,(elm-package-name name) . ,(elm-&gt;guix-package name version))))
+                (get-dependencies elm.json))))
+      (else
+         (error &quot;unsupported elm package type: &quot; type)))))</code></pre>
+<p>Running this on <code>elm.json</code> within the <code>puzzle-draw</code> sources now gives us an almost-ready package:</p>
+<pre><code>(let ((elm-url
+        (package
+          (name &quot;elm-url&quot;)
+          (version &quot;1.0.0&quot;)
+          (source
+            (origin
+              (method url-fetch)
+              (uri (elm-package-uri &quot;elm/url&quot; version))
+              (sha256
+                (base32
+                  &quot;0av8x5syid40sgpl5vd7pry2rq0q4pga28b4yykn9gd9v12rs3l4&quot;))))
+          (build-system elm-package-build-system)
+          (synopsis
+            &quot;Create and parse URLs. Use for HTTP and \&quot;routing\&quot; in single-page apps (SPAs)&quot;)
+          (description
+            &quot;Create and parse URLs. Use for HTTP and \&quot;routing\&quot; in single-page apps (SPAs)&quot;)
+          (home-page #f)
+          (license license:bsd-3)))
+      (elm-json
+        ...)
+      ...)
+  (package
+    (name #f)
+    (version #f)
+    (source #f)
+    (build-system elm-application-build-system)
+    (native-inputs
+      `((&quot;elm-url&quot; ,elm-url)
+        (&quot;elm-json&quot; ,elm-json)
+        (&quot;elm-http&quot; ,elm-http)
+        (&quot;elm-html&quot; ,elm-html)
+        (&quot;elm-core&quot; ,elm-core)
+        (&quot;elm-browser&quot; ,elm-browser)
+        (&quot;elm-virtual-dom&quot; ,elm-virtual-dom)
+        (&quot;elm-time&quot; ,elm-time)))
+    (synopsis #f)
+    (description #f)
+    (home-page #f)
+    (license #f)))</code></pre>
+<aside>
+<p>I’ve decided to define dependency packages locally within the package definition using that <code>let</code> clause. It wouldn’t really make sense to define say a global <code>elm-url</code> package at version <code>1.0.0</code>, because Elm applications specify fixed dependency versions. So to share dependencies within the global package set, we’d need versioned identifiers, which seems contrary to how Guix typically does things.</p>
+Note that the paths within the Guix store will still be shared, this is merely about sharing the Guile expression defining the dependency.
+</aside>
+<p>As you see, some fields have been left out, because <code>elm.json</code> doesn’t specify them for applications. Most importantly, we need to fill the source field, such as this:</p>
+<pre><code>(define-public puzzle-draw-elm
+  (let ((elm-url ...) ...)
+    (package
+      (name &quot;puzzle-draw-elm&quot;)
+      (version &quot;current&quot;)
+      (source &quot;/home/rob/puzzle-draw/web&quot;)
+      (build-system elm-application-build-system)
+      (arguments
+        `(#:elm-modules (((&quot;Main.elm&quot;) . &quot;web.js&quot;))))
+      ...)))</code></pre>
+<p>Here, we’re not defining a “proper” origin for the source, but just telling Guix to use a local checkout.</p>
+<aside>
+<p>There are downsides to using a local path like this. One that I keep running into is that this will copy the whole directory tree, including for example an <code>elm-stuff</code> directory, which will cause the build to fail.</p>
+So far, I haven’t succeeded in telling Guix to use a given commit from a local git repository. Ideally, when building locally, I’d like to be able to tell it to build from the <code>master</code> or <code>release</code> branch, without giving a hash.
+</aside>
+<p>It works!</p>
+<pre><code>$ guix build -L . puzzle-draw-elm
+[...]
+/gnu/store/dd3i77nimvp17vgrak14yshd10mfm66c-puzzle-draw-elm-current
+$ ls /gnu/store/dd3i77nimvp17vgrak14yshd10mfm66c-puzzle-draw-elm-current
+web.js</code></pre>
+<h1 id="packaging-the-elm-reactor">Packaging the Elm reactor</h1>
+<p>Finally, let’s use our new build systems to package Elm more fully. We can package the reactor web app by calling</p>
+<pre><code>$ guix import elm ui/browser/elm.json</code></pre>
+<p>within the Elm compiler repository. With some tweaks, we get</p>
+<pre><code>(define elm-reactor
+  (let
+      ((elm-virtual-dom ...)
+      ...)
+      (package
+      (name &quot;elm-reactor&quot;)
+      (version &quot;0.19.0&quot;)
+      (source
+       (origin
+         (method url-fetch)
+         (file-name &quot;elm-0.19.0.tar.gz&quot;)
+         (uri &quot;https://github.com/elm/compiler/archive/0.19.0.tar.gz&quot;)
+         (sha256
+          (base32 &quot;0g4risrjrvngz3j4wf432j82gjcc8i1b7l5lwbb0fhr24hvz6ka9&quot;))
+         ; FIXME: extract reactor subdirectory, there must be a better way to do this
+         (snippet #~(begin
+                      (use-modules (guix build utils) (ice-9 ftw))
+                      (let ((files (scandir &quot;.&quot; (lambda (f) (not (or (equal? f &quot;.&quot;)
+                                                                     (equal? f &quot;..&quot;)
+                                                                     (equal? f &quot;ui&quot;)))))))
+                        (for-each delete-file-recursively files)
+                        (copy-recursively &quot;ui/browser&quot; &quot;.&quot;)
+                        (delete-file-recursively &quot;ui&quot;))))))
+      (build-system elm-application-build-system)
+      (arguments '(#:elm-modules (((&quot;Errors.elm&quot; &quot;Index.elm&quot; &quot;NotFound.elm&quot;) . &quot;elm.js&quot;))))
+      (native-inputs
+       `((&quot;elm-virtual-dom&quot; ,elm-virtual-dom)
+         (&quot;elm-parser&quot; ,elm-parser)
+         (&quot;elm-time&quot; ,elm-time)
+         (&quot;elm-url&quot; ,elm-url)
+         (&quot;elm-svg&quot; ,elm-svg)
+         (&quot;elm-core&quot; ,elm-core)
+         (&quot;elm-http&quot; ,elm-http)
+         (&quot;elm-html&quot; ,elm-html)
+         (&quot;elm-json&quot; ,elm-json)
+         (&quot;elm-markdown&quot; ,elm-markdown)
+         (&quot;elm-project-metadata-utils&quot;
+          ,elm-project-metadata-utils)
+         (&quot;elm-browser&quot; ,elm-browser)))
+      (synopsis &quot;Elm's reactor, internal to elm&quot;)
+      (description &quot;Elm's reactor&quot;)
+      (home-page &quot;https://elm-lang.org&quot;)
+      (license bsd-3))))</code></pre>
+<p>The interesting bit is the source manipulation snippet, which succeeds in manipulating the source tree to consist of the reactor sources only, in a horrendously messy way. Additionally, we list the Elm source files as the <code>elm-modules</code> argument.</p>
+<p>With our new <code>elm-reactor</code> package, we can build the full Elm tool, by modifying the packaging from the <a href>previous article</a> slightly:</p>
+<pre><code>(define-public elm
+  (package
+    (name &quot;elm&quot;)
+    (version &quot;0.19.0&quot;)
+    (source
+     (origin
+       (method git-fetch)
+       (file-name (git-file-name name version))
+       (uri (git-reference
+             (url &quot;https://github.com/elm/compiler/&quot;)
+             (commit version)))
+       (sha256
+        (base32 &quot;0s93z9vr0vp5w894ghc5s34nsq09sg1msf59zfiba87sid5vgjqy&quot;))
+       (patches
+        (search-patches &quot;elm-include-reactor.patch&quot;
+                        &quot;elm-compiler-relax-glsl-bound.patch&quot;
+                        &quot;elm-compiler-fix-map-key.patch&quot;))))</code></pre>
+<p>The first difference is that instead of patching out the reactor, we patch the build to read a Javascript file from disk instead of calling out to itself:</p>
+<pre><code>$ cat elm-include-reactor.patch
+diff --git a/ui/terminal/src/Develop/StaticFiles.hs b/ui/terminal/src/Develop/StaticFiles.hs
+index 3659d112..f77635c7 100644
+--- a/ui/terminal/src/Develop/StaticFiles.hs
++++ b/ui/terminal/src/Develop/StaticFiles.hs
+@@ -89,7 +89,7 @@ sansFontPath =
+ 
+ elm :: BS.ByteString
+ elm =
+-  $(bsToExp =&lt;&lt; runIO Build.compile)
++  $(bsToExp =&lt;&lt; runIO (Build.readAsset &quot;elm.js&quot;))
+ 
+ 
+ </code></pre>
+<p>Continuing,</p>
+<pre><code>    (build-system haskell-build-system)
+    (arguments
+     `(#:phases
+       (modify-phases %standard-phases
+         (add-after 'unpack 'unpack-reactor
+           (lambda* (#:key inputs #:allow-other-keys)
+             (copy-file
+              (string-append (assoc-ref inputs &quot;elm-reactor&quot;) &quot;/elm.js&quot;)
+              &quot;ui/browser/assets/elm.js&quot;))))))</code></pre>
+<p>we add a phase to the build to copy over that Javascript file from <code>elm-reactor</code> after unpacking the Elm sources.</p>
+<pre><code>    (inputs
+     `((&quot;elm-reactor&quot; ,elm-reactor)
+       (&quot;ghc-ansi-terminal&quot; ,ghc-ansi-terminal)
+       ...))
+    (home-page &quot;https://elm-lang.org&quot;)
+    (synopsis &quot;The `elm` command line interface, including `elm reactor`.&quot;)
+    (description
+     &quot;This package provides Elm, a statically-typed functional programming
+language for the browser.  It includes commands for developers such as
+@command{elm make} and @command{elm repl}.&quot;)
+    (license license:bsd-3)))</code></pre>
+<p>We add <code>elm-reactor</code> to the inputs, and it’s done.</p>
+<pre><code>$ guix package -i elm
+[...]
+The following package will be installed:
+   elm	0.19.0	/gnu/store/sfj3rdx3rlc6mgnwgs7y7vhkvpbvdxpn-elm-0.19.0
+[...]
+$ elm reactor
+Go to &lt;http://localhost:8000&gt; to see your project dashboard.</code></pre>
+<aside>
+<p>It’s interesting to compare our Elm build system and the packaging of the Elm reactor with how this is done in Nix, which deals with both core issues (requiring a valid <code>versions.dat</code>, and the self-referential build) <a href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/compilers/elm/README.md">differently</a>: For one, it bundles a pre-generated <code>versions.dat</code> instead of generating it on the fly. Secondly, it builds an unpatched <code>elm tool</code> directly by providing a package database from the start.</p>
+<p>I find that generating <code>versions.dat</code> ourselves makes packaging of Elm applications quite a bit simpler since we don’t need to use the <code>elm</code> tool ourselves, at the expense of duplicating the logic. Also, that code was fun to write!</p>
+Regarding the second point, I’m quite convinced the two stage build process is an improvement, just because it’s so much simpler and easier to reason about. Although I’ll have to admit that to some extent it’s forced by Guix’ use of language-specific build systems: We don’t want to deal with building Elm code in a Haskell package.
+</aside>
+<p>That’s it for part 2. The code is available on branch <code>elm</code> of <a href="https://github.com/robx/guix/tree/elm">github.com/robx/guix</a>. The elm package itself in <a href="https://github.com/robx/guix/blob/elm/gnu/packages/elm.scm">gnu/packages/elm.scm</a>. At this point, none of the content of this article has made it to Guix upstream, because I haven’t submitted patches. While all of this works well enough, there’s some work to be done before I’d want to submit this upstream, which I currently don’t plan on doing:</p>
+<ul>
+<li>Improve some of the hacky parts, such as
+<ul>
+<li>unpacking source archives in the build system,</li>
+<li>detecting Elm package inputs.</li>
+</ul></li>
+<li>Find a better way to specify the <code>elm make</code> command line, such as calling <code>make build</code> if there’s a <code>Makefile</code> around.</li>
+<li>Generally clean up the code a bit.</li>
+<li>Split the work into patches that satisfy the somewhat arcane commit message requirements of upstream.</li>
+<li>Decide on how to package Elm package dependencies. I suspect keeping them application-local as we did here is not how the Guix project would prefer to handle this.</li>
+<li>Update to Elm 0.19.1.</li>
+</ul>
+<p>I’d be thrilled if someone chose to take care of this, and would be happy to assist!</p>
+<p>Tune in again for <a href="guix-elm-3.html">part 3</a>, where we’ll wrap this up by figuring out how to serve an Elm web application on Guix.</p>
+</article>
+
+        </main>
+    </body>
+</html>
