@@ -105,10 +105,10 @@ web.js</code></pre>
 <p>We provide both <code>puzzle-draw</code> and <code>puzzle-draw-elm</code> as inputs, as well as <code>bash</code> since we’ll generate a wrapper shell script via <code>wrap-program</code> that will reference it.</p>
 <aside>
 <p>I’m a bit fuzzy on the distinction between <code>inputs</code> and <code>native-inputs</code>. In a cross-compilation setup, <code>inputs</code> will be built for the target, while <code>native-inputs</code> for the host. In that sense, it’s fine to put the Elm package in <code>native-inputs</code>, because the Javascript artifacts are platform-independent.</p>
-But I can’t quite align this interpretation with the common use of <code>native-inputs</code> to specify dependencies that are used for unit tests, but not the final build products. The point being that unit tests would be run on the host system, while output artefacts are built for the target system.
+But I can’t quite align this interpretation with the common use of <code>native-inputs</code> to specify dependencies that are used for unit tests, but not the final build products. The point being that unit tests would be run on the host system, while output artifacts are built for the target system.
 </aside>
 <p>Guix always provides us with a Guile interpreter; via the <code>modules</code> argument, we instruct it to make the <code>(guix build utils</code> module available to our script.</p>
-<p>The script itself then merely copies our various ingredients to the output path, before wrapping <code>servepuzzle</code> in a shellscript that sets an environment variable to let the server know where to find its static files.</p>
+<p>The script itself then merely copies our various ingredients to the output path, before wrapping <code>servepuzzle</code> in a shell-script that sets an environment variable to let the server know where to find its static files.</p>
 <h1 id="a-puzzle-draw-shepherd-service">A puzzle-draw Shepherd service</h1>
 <p>The <a href="https://www.gnu.org/software/shepherd/">GNU Shepherd</a> is Guix System’s <code>init</code>. It’s a Guile daemon originating as <code>dmd</code> with GNU Hurd.</p>
 <aside>
@@ -173,7 +173,7 @@ standard output and error redirected to syslog via logger.&quot;
           (dup pipe 2)
           (execl #$exec #$exec #$@args))))
   (program-file (string-append name &quot;-logger&quot;) exp))</code></pre>
-<p>This is required because, by default, <a href="https://debbugs.gnu.org/cgi/bugreport.cgi?bug=36264">Shepherd is happy</a> to let its child processes dump their output to Shepherd’s <code>stdout</code>, i.e. the console, where it will never be seen. Note that the <code>#~(begin</code>, <code>#$</code>, <code>#$@</code> magic here is the G-expressions version of Scheme quasiquoting, allowing us to mix host and target code.</p>
+<p>This is required because, by default, <a href="https://debbugs.gnu.org/cgi/bugreport.cgi?bug=36264">Shepherd is happy</a> to let its child processes dump their output to Shepherd’s <code>stdout</code>, i.e. the console, where it will never be seen. Note that the <code>#~(begin</code>, <code>#$</code>, <code>#$@</code> magic here is the G-expressions version of Scheme quasi-quoting, allowing us to mix host and target code.</p>
 <h1 id="configuring-the-system">Configuring the system</h1>
 <p>Now to bring our new service live. Our Guix system is defined by an <code>operating-system</code> record which comes with a list of services:</p>
 <pre><code>(operating-system
