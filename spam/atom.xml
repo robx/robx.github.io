@@ -939,7 +939,7 @@ The Guile module <code>(guix packages)</code> is defined in <code>guix/packages.
 <p>The next failure relates to the broken source field:</p>
 <pre><code>$ guix build -f elm.scm
 guix build: error: exception thrown: #&lt;condition &amp;invalid-base32-character [character: #\e string: &quot;failed to download tar archive&quot;] 29c9f00&gt;</code></pre>
-<p>Unsurprisingly, <code>"failed to download tar archive"</code> isn’t a valid base32 hash. This happened because <code>elm</code> isn’t actually published on <a href="https://hackage.haskell.org">Hackage</a>, so `guix import failed to download the source archive and compute a hash. To fix this, we edit the file to refer to a correct URI for the elm compiler sources, put in some arbitray valid hash copied from another package definition, and eventually fix the hash to the correct version.</p>
+<p>Unsurprisingly, <code>"failed to download tar archive"</code> isn’t a valid base32 hash. This happened because <code>elm</code> isn’t actually published on <a href="https://hackage.haskell.org">Hackage</a>, so <code>guix import</code> failed to download the source archive and compute a hash. To fix this, we edit the file to refer to a correct URI for the elm compiler sources, put in some arbitray valid hash copied from another package definition, and eventually fix the hash to the correct version.</p>
 <pre><code>$ guix build -f elm.scm
 ice-9/eval.scm:223:20: In procedure proc:
 error: url-fetch: unbound variable
