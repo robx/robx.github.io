@@ -236,14 +236,17 @@ The whole reconfiguration story is a bit of a mess: If I found out I made a mist
     <link href="https://vllmrt.net/spam/guix-elm-2.html" />
     <id>https://vllmrt.net/spam/guix-elm-2.html</id>
     <published>2019-11-27T00:00:00Z</published>
-    <updated>2019-11-27T00:00:00Z</updated>
+    <updated>2019-12-03</updated>
     <summary type="html"><![CDATA[<article>
     <section class="header">
         <time>November 27, 2019</time>
         
         
     </section>
-    <p>This is the second in a series of articles on working with Elm in Guix. See the <a href="guix-elm-1.html">first article</a> for an introduction. The outline is:</p>
+    <aside>
+Updated 2019-12-03: Add link to guix-devel email discussing Elm packaging.
+</aside>
+<p>This is the second in a series of articles on working with Elm in Guix. See the <a href="guix-elm-1.html">first article</a> for an introduction. The outline is:</p>
 <ol type="1">
 <li><a href="guix-elm-1.html">packaging the Elm compiler</a></li>
 <li>developing Guix infrastructure for building Elm apps, and using this to package the Elm reactor, and the full Elm tool</li>
@@ -649,7 +652,8 @@ the `package&#39; s-expression corresponding to that package.&quot;
     (license #f)))</code></pre>
 <aside>
 <p>I’ve decided to define dependency packages locally within the package definition using that <code>let</code> clause. It wouldn’t really make sense to define say a global <code>elm-url</code> package at version <code>1.0.0</code>, because Elm applications specify fixed dependency versions. So to share dependencies within the global package set, we’d need versioned identifiers, which seems contrary to how Guix typically does things.</p>
-Note that the paths within the Guix store will still be shared, this is merely about sharing the Guile expression defining the dependency.
+<p>Note that the paths within the Guix store will still be shared, this is merely about sharing the Guile expression defining the dependency.</p>
+See also this <a href="https://lists.gnu.org/archive/html/guix-devel/2019-07/msg00139.html">email to guix-devel</a>.
 </aside>
 <p>As you see, some fields have been left out, because <code>elm.json</code> doesn’t specify them for applications. Most importantly, we need to fill the source field, such as this:</p>
 <pre><code>(define-public puzzle-draw-elm
