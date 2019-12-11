@@ -6,7 +6,7 @@ nav a {
 /* based on https://jrl.ninja/etc/post.css */
 body {
   font-family: Liberation Sans, sans-serif;
-  background-color: #fffcf2;
+  background-color: #fffcf8;
   line-height: 1.5;
 }
 main {
@@ -16,6 +16,22 @@ main {
 }
 header {
   margin-bottom: 1.5rem;
+}
+footer {
+  font-size: smaller;
+  font-style: italic;
+}
+footer::before {
+  content: '';
+  display: block;
+  margin-top: 1.5rem;
+  margin-left: 0;
+  margin-right: 0;
+  padding-top: 12px;
+  border-top: solid black 1px;
+}
+.email {
+  font-family: monospace;
 }
 h1 {
   margin-bottom: .5rem;

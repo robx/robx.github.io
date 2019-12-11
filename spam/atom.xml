@@ -228,6 +228,12 @@ $ sudo herd restart nginx</code></pre>
 The whole reconfiguration story is a bit of a mess: If I found out I made a mistake and wanted to roll back, the quickest would be to manually undo the change in the configuration and call <code>guix system reconfigure</code> again. <code>guix system roll-back</code> <a href="https://debbugs.gnu.org/cgi/bugreport.cgi?bug=36855">won’t pick up the old service setup without a reboot</a>.
 </aside>
 <p>Done! <a href="https://garp.vllmrt.net/puzzles/draw/">Draw some puzzles</a>!</p>
+    <footer>
+    If you have comments or questions, write me at
+    <span class="email">&lt;spam at this domain&gt;</span>.
+    <br>
+    More articles at <a href="/spam">/spam</a>.
+    </footer>
 </article>
 ]]></summary>
 </entry>
@@ -808,6 +814,12 @@ Regarding the second point, I’m quite convinced the two stage build process is
 </ul>
 <p>I’d be thrilled if someone chose to take care of this, and would be happy to assist!</p>
 <p>Tune in again for <a href="guix-elm-3.html">part 3</a>, where we’ll wrap this up by figuring out how to serve an Elm web application on Guix.</p>
+    <footer>
+    If you have comments or questions, write me at
+    <span class="email">&lt;spam at this domain&gt;</span>.
+    <br>
+    More articles at <a href="/spam">/spam</a>.
+    </footer>
 </article>
 ]]></summary>
 </entry>
@@ -1077,6 +1089,12 @@ Hi, thank you for trying out Elm 0.19.0. I, Evan, hope you like it!
 </ul>
 <p>You can look at the complete patch <a href="http://git.savannah.gnu.org/cgit/guix.git/commit/?id=c902458863d1d341ffd74970b75e69c2bb848183">in the guix repository</a>.</p>
 <p>In the <a href="guix-elm-2.html">next article</a>, we’ll see how to use the Elm compiler within Guix to package Elm applications.</p>
+    <footer>
+    If you have comments or questions, write me at
+    <span class="email">&lt;spam at this domain&gt;</span>.
+    <br>
+    More articles at <a href="/spam">/spam</a>.
+    </footer>
 </article>
 ]]></summary>
 </entry>
@@ -1246,6 +1264,12 @@ As dependencies get updated, the cache will keep growing. This seems to be a gen
 <li><p>I’m building the site with <code>stack</code> locally, instead of <code>cabal</code>. I went with <code>cabal</code> here because that’s what <code>actions/setup-haskell</code> provides, but would prefer to set this up with <code>stack</code>.</p></li>
 <li><p>I’m using a forked version of Hakyll via <a href="https://github.com/robx/site-demo/blob/master/cabal.project">cabal.project</a>, and that is getting rebuilt every time. It would be nice to figure out how to cache this.</p></li>
 </ul>
+    <footer>
+    If you have comments or questions, write me at
+    <span class="email">&lt;spam at this domain&gt;</span>.
+    <br>
+    More articles at <a href="/spam">/spam</a>.
+    </footer>
 </article>
 ]]></summary>
 </entry>
@@ -1443,6 +1467,12 @@ print_grids([], !IO).
 print_grids([G|Gs], !IO) :-
     foldl(write_line, show(G), !IO),
     print_grids(Gs, !IO).</code></pre>
+    <footer>
+    If you have comments or questions, write me at
+    <span class="email">&lt;spam at this domain&gt;</span>.
+    <br>
+    More articles at <a href="/spam">/spam</a>.
+    </footer>
 </article>
 ]]></summary>
 </entry>
@@ -1540,6 +1570,12 @@ print_grids([G|Gs], !IO) :-
           -- (4,5) -- (3,6) -- (2,5)
           -- (1,6) -- (0,5) -- (1,4)
           -- (0,3) -- (1,2) -- (0,1) -- (1,0);</code></pre>
+    <footer>
+    If you have comments or questions, write me at
+    <span class="email">&lt;spam at this domain&gt;</span>.
+    <br>
+    More articles at <a href="/spam">/spam</a>.
+    </footer>
 </article>
 ]]></summary>
 </entry>
