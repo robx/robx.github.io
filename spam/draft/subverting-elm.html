@@ -333,7 +333,9 @@ elm-datetime demo, v1
 <p>itself is a pure function,</p>
 <pre><code>localNumericDateTime : DateTimeFormat</code></pre>
 <p>is lying when it pretends to be: Calling <code>Intl.DateTime(locale, options)</code> without fully resolved options as we do depends on the environment, and might change between calls, e.g. if the timezone changes.</p>
-<p>To model this correctly, we should change it to have <code>a</code>Task<code>type: ``` localNumericDateTime : Task x DateTimeFormat ``` Modelling things on [</code>Time.here`](https://package.elm-lang.org/packages/elm/time/latest/Time#here), we change the Javascript module as follows:</p>
+<p>To model this correctly, we should change it to have a <code>Task</code> type:</p>
+<pre><code>localNumericDateTime : Task x DateTimeFormat</code></pre>
+<p>Modelling things on <a href="https://package.elm-lang.org/packages/elm/time/latest/Time#here"><code>Time.here</code></a>, we change the Javascript module as follows:</p>
 <pre><code>--- a/src/Elm/Kernel/DateTime.js
 +++ b/src/Elm/Kernel/DateTime.js
 @@ -1,14 +1,21 @@
