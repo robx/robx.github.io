@@ -29,10 +29,10 @@ formatTimestamp ts =
 <li>meet the ECMAScript Internationalization API</li>
 <li>figure out how to write a simple native Elm module</li>
 <li>build a binary package database using <code>printf(1)</code></li>
-<li>and trick the Elm compiler to compile this for us.</li>
+<li>to trick the Elm compiler into cooperating.</li>
 </ul>
 <aside>
-What we’re doing here is most likely not the Elm team’s preferred approach. As such, best keep this out of the official Elm community channels, particularly if you run into trouble.
+What we’re doing here is most likely not the Elm team’s preferred approach. As such, best to keep this out of the official Elm community channels.
 </aside>
 <h1 id="the-internationalization-api">The Internationalization API</h1>
 <p>The first thing we’ll need to do is to move from stringy timestamps to something more logical. Elm 0.19 talks Unix timestamps, with</p>
@@ -40,7 +40,7 @@ What we’re doing here is most likely not the Elm team’s preferred approach. 
 <p>the number of milliseconds since the epoch. Instead of parsing the timestamps client-side using something like <a href="https://package.elm-lang.org/packages/rtfeldman/elm-iso8601-date-strings/latest/">rtfeldman/elm-iso8601-date-strings</a>, I opted to do the conversion in the PostgREST backend:</p>
 <pre><code>          , published_at
 +         , EXTRACT(EPOCH FROM published_at)*1000 AS published_at_posix</code></pre>
-<p>So we’re now looking for a timezone and locale aware function <code>formatTimestamp : Posix -&gt; String</code>. It turns out that browsers have a pretty neat API for this and related topics in the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl">ECMAScript Internationalization API</a>. Here’s a way to do what I want, given a <code>Posix</code> value.</p>
+<p>So we’re now looking for a timezone and locale aware function <code>formatTimestamp : Posix -&gt; String</code>. It turns out that browsers have a rather neat interface for this and related topics in the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl">ECMAScript Internationalization API</a>. Here’s a way to do what I want, given a <code>Posix</code> value:</p>
 <pre><code>function formatTimestamp(posix) {
 	var dateTimeFormat = new Intl.DateTimeFormat(undefined, {
 		year: 'numeric',
@@ -72,10 +72,10 @@ What we’re doing here is most likely not the Elm team’s preferred approach. 
 <p>Doing the same in Elm 0.19 turns out to be tricky, however. The time library situation is a bit of a mess, with a very barebones core library <a href="https://package.elm-lang.org/packages/elm/time/1.0.0/">elm/time</a> that speaks Unix timestamps, and a variety of other date and time related packages, none of which appear to do the job.</p>
 <p>And after all, we have a simple, mostly pure Javascript solution available, so why not just use that?</p>
 <aside>
-There’s an 0.18 package <a href="https://github.com/vanwagonet/elm-intl">vanwagonet/elm-intl</a>, but attempts to get that functionality into 0.19 were <a href="https://discourse.elm-lang.org/t/bindings-for-intl/1264">stalled</a>.
+There’s an 0.18 package <a href="https://github.com/vanwagonet/elm-intl">vanwagonet/elm-intl</a> wrapping <code>Intl</code>, but attempts to get that functionality into 0.19 were <a href="https://discourse.elm-lang.org/t/bindings-for-intl/1264">stalled</a>.
 </aside>
 <h1 id="calling-native-code">Calling native code</h1>
-<p>The documented approach to interacting with Javascript code from Elm is using <a href="https://guide.elm-lang.org/interop/ports.html">ports</a>, which would effectively turn a simple function call into an asynchronous RPC invocation with a ton of scaffolding. That didn’t appear to be an acceptable solution, so I thought I’d apply my <a href="guix-elm-2.html">recent insight</a> into the <code>elm</code> tooling to figure out how to use the Javascript API from within Elm. That seemed like a fun challenge, too!</p>
+<p>The documented approach to interacting with Javascript code from Elm is using <a href="https://guide.elm-lang.org/interop/ports.html">ports</a>, which would effectively turn a simple function call into an asynchronous RPC invocation with a ton of scaffolding. That didn’t appear to be an acceptable solution, so I thought I’d apply my <a href="guix-elm-2.html">recent insight</a> into the <code>elm</code> tooling to figure out how to use the Javascript API from within Elm. It seemed like a fun challenge, too!</p>
 <h2 id="a-native-module">A native module</h2>
 <p>By following along what <code>vanwagonet/elm-intl</code> and <code>elm/time</code> do for their Javascript interop, I came up with a native module <code>Elm.Kernel.DateTime</code> implemented in the file <code>src/Elm/Kernel/DateTime.js</code></p>
 <pre><code>/*
@@ -112,8 +112,10 @@ localNumericDateTime =
 format : DateTimeFormat -&gt; Posix -&gt; String
 format dateTimeFormat posix =
     Elm.Kernel.DateTime.format dateTimeFormat (Time.posixToMillis posix)</code></pre>
-<p>Walking through the Javascript file, it starts with an empty header comment listing Elm imports (we don’t have any). Then, we declare the function <code>Elm.Kernel.DateTime.localNumericDateTime</code> as <code>_DateTime_localNumericDateTime</code>. This is called from Elm with a unit argument. Finally we declare the two-argument function <code>_DateTime_format</code> in curried form using the helper <code>F2</code>.</p>
-<h2 id="building">Building</h2>
+<p>Walking through the Javascript file, it starts with an empty header comment listing Elm imports (we don’t have any). Then, we declare the function</p>
+<pre><code>Elm.Kernel.DateTime.localNumericDateTime</code></pre>
+<p>as <code>_DateTime_localNumericDateTime</code>. This is called from Elm with a unit argument. Finally we declare the two-argument function <code>_DateTime_format</code> in curried form using the helper <code>F2</code>.</p>
+<h2 id="compiling-the-module">Compiling the module</h2>
 <p>Setting things up naïvely with the following <code>elm.json</code></p>
 <pre><code>{
     &quot;type&quot;: &quot;package&quot;,
@@ -149,7 +151,7 @@ the Elm/Kernel/ namespace.
 <pre><code>$ elm make
 Success! Compiled 1 module.                                          </code></pre>
 <aside>
-Here, we should also call <code>elm make --docs=docs.json</code> to check that it’s happy with the state of documentation.
+Here, we should also call <code>elm make --docs=docs.json</code> to check that it’s happy with the state of documentation. Otherwise, compiling an app using this package will fail with an obscure error messages. Elm tooling ensures that published package dependencies don’t fail to compile, but we’ll have to bypass some of that later.
 </aside>
 <h2 id="a-little-demo-app">A little demo app</h2>
 <p>To test our function and give us something concrete to try to make work, let’s build a small demo app that merely ticks a clock:</p>
@@ -253,7 +255,7 @@ I ran into an unknown package while exploring dependencies:
 <li>generate an elm registry, by using <code>printf(1)</code> to generate binary data</li>
 <li>call <code>HOME=./elm-stuff/home HTTP_PROXY=. elm make</code> to build.</li>
 </ol>
-<p>I collected and wrapped up the various shell snippets I came up with to achieve this as <a href="https://github.com/robx/shelm">shelm</a>. Let’s have a look at some of the core parts:</p>
+<p>I collected and wrapped up the various shell snippets involved in this as a bash script, <a href="https://github.com/robx/shelm">shelm</a>. Let’s have a look at some of the core parts:</p>
 <p>For regular Elm packages, step 1 may be achieved with <a href="https://stedolan.github.io/jq/"><code>jq</code></a>, <code>curl</code> and <code>tar</code>:</p>
 <pre><code>jq -r '.dependencies.direct+.dependencies.indirect
 	| to_entries[]
@@ -281,7 +283,7 @@ done</code></pre>
         }
     }
 }</code></pre>
-<p>A more compact format like <code>"elm/my-elm-datetime": "robx/elm-datetime"</code> worked initially; the present form is a result of overengineering my packaging script. We might tweak our unpacking fragment above to support this as follows:</p>
+<p>A more compact format like <code>"elm/my-elm-datetime": "robx/elm-datetime"</code> worked initially; the present form is a result of overengineering the packaging script. We might tweak our unpacking fragment above to support this as follows:</p>
 <pre><code>location=$(jq '.dependencies.locations.&quot;'&quot;$package&quot;'.name // &quot;'&quot;$package&quot;'&quot; &lt; elm.json)
 (cd $unpack &amp;&amp; curl -L https://github.com/&quot;$location&quot;/archive/&quot;$version&quot;.tar.gz | tar -xz)</code></pre>
 <p>For step 2, we list the packages and versions that we’ve just “installed” into the package cache, and write them to Elm’s binary package registry format. We can use <code>printf(1)</code> for this. E.g., integers are encoded as 8 big-endian bytes:</p>
@@ -294,22 +296,11 @@ encode_int64() {
 <p>See the <a href="guix-elm-2.html">guix discussion</a> for more details.</p>
 <p>After fixing various bugs, this works!</p>
 <pre class="scroll"><code>$ (cd elm-stuff/home/.elm/0.19.1/packages &amp;&amp; ls -d */*/*)
-elm/browser/1.0.1		elm/my-elm-datetime/1.1.0
+elm/browser/1.0.1		elm/my-elm-datetime/1.0.0
 elm/core/1.0.2			elm/time/1.0.0
 elm/html/1.0.0			elm/url/1.0.0
 elm/json/1.1.3			elm/virtual-dom/1.0.2
-$ ls -l 
-$ cd elm-stuff/home/.elm/0.19.1/packages/*/*/*
-elm-stuff/home/.elm/0.19.0/package/elm/browser/1.0.1
-elm-stuff/home/.elm/0.19.0/package/elm/core/1.0.2
-elm-stuff/home/.elm/0.19.0/package/elm/html/1.0.0
-elm-stuff/home/.elm/0.19.0/package/elm/json/1.1.3
-elm-stuff/home/.elm/0.19.0/package/elm/my-elm-datetime/1.0.0
-elm-stuff/home/.elm/0.19.0/package/elm/time/1.0.0
-elm-stuff/home/.elm/0.19.0/package/elm/url/1.0.0
-elm-stuff/home/.elm/0.19.0/package/elm/virtual-dom/1.0.2
-$ hexdump -C !$
-hexdump -C elm-stuff/home/.elm/0.19.1/packages/registry.dat
+$ hexdump -C elm-stuff/home/.elm/0.19.1/packages/registry.dat
 00000000  00 00 00 00 00 00 00 08  00 00 00 00 00 00 00 08  |................|
 00000010  03 65 6c 6d 07 62 72 6f  77 73 65 72 01 00 01 00  |.elm.browser....|
 00000020  00 00 00 00 00 00 00 03  65 6c 6d 04 63 6f 72 65  |........elm.core|
@@ -337,10 +328,12 @@ elm-datetime demo, v1
 </figcaption>
 </figure>
 <h1 id="making-things-right">Making things right</h1>
-<p>We might stop here, but there’s still an issue with our native <code>DateTime</code> module. While <code>format : DateTimeFormat -&gt; Posix -&gt; String</code> itself is a pure function, <code>localNumericDateTime : DateTimeFormat</code> itself is lying when it pretends to be: Calling <code>Intl.DateTime(locale, options)</code> without fully resolved options as we do depends on the environment, and might change between calls, e.g. if the timezone changes.</p>
-<p>To model this correctly, we should change it to have a type like</p>
-<pre><code>localNumericDateTime : Task x DateTimeFormat</code></pre>
-<p>Modelling things on <a href="https://package.elm-lang.org/packages/elm/time/latest/Time#here"><code>Time.here</code></a>, we change the Javascript module as follows:</p>
+<p>We might stop here, but there’s still an issue with our native <code>DateTime</code> module. While</p>
+<pre><code>format : DateTimeFormat -&gt; Posix -&gt; String</code></pre>
+<p>itself is a pure function,</p>
+<pre><code>localNumericDateTime : DateTimeFormat</code></pre>
+<p>is lying when it pretends to be: Calling <code>Intl.DateTime(locale, options)</code> without fully resolved options as we do depends on the environment, and might change between calls, e.g. if the timezone changes.</p>
+<p>To model this correctly, we should change it to have <code>a</code>Task<code>type: ``` localNumericDateTime : Task x DateTimeFormat ``` Modelling things on [</code>Time.here`](https://package.elm-lang.org/packages/elm/time/latest/Time#here), we change the Javascript module as follows:</p>
 <pre><code>--- a/src/Elm/Kernel/DateTime.js
 +++ b/src/Elm/Kernel/DateTime.js
 @@ -1,14 +1,21 @@
@@ -383,7 +376,7 @@ elm-datetime demo, v1
  
 @@ -33,7 +34,7 @@ type DateTimeFormat
  
- {-| Create a DateTimeFormat using user locale and timezonerules.
+ {-| Create a DateTimeFormat using user locale and timezone.
  -}
 -localNumericDateTime : DateTimeFormat
 +localNumericDateTime : Task x DateTimeFormat
@@ -402,7 +395,7 @@ elm-datetime demo, v1
      &quot;exposed-modules&quot;: [
          &quot;DateTime&quot;
      ],</code></pre>
-<p>Getting this into our demo involves performing this task to obtain our formatter at application startup:</p>
+<p>Getting this into our demo involves performing this task to obtain our formatter at application startup, and keeping it around in the model:</p>
 <pre class="scroll"><code>+++ b/demo/elm.json
 @@ -10,7 +10,7 @@
              &quot;elm/core&quot;: &quot;1.0.2&quot;,
@@ -474,7 +467,7 @@ index fd85793..776b913 100644
                  [ Html.div [] [ Html.text &lt;| String.fromInt &lt;| Time.posixToMillis &lt;| posix ]
                  , Html.div [] [ Html.text &lt;| format posix ]
                  ]</code></pre>
-<p>Done: Still works! (With no difference, except it should fail to take into account possible locale and timezone changes.)</p>
+<p>Done: Still works! (With no difference, except that it should fail to take into account possible locale and timezone changes.)</p>
 <pre><code>$ make
 shelm fetch
 pruning stale dependency elm/my-elm-datetime-1.0.0
@@ -484,6 +477,7 @@ shelm make --output=demo.js src/Demo.elm
 Dependencies loaded from local cache.
 Dependencies ready!                
 Success! Compiled 1 module.                                          </code></pre>
+<p>This time around, I used <a href="https://github.com/robx/shelm">shelm</a> to build the application via <code>make</code>. You can find the full code for the package and demo app at <a href="https://github.com/robx/elm-datetime">github.com/robx/elm-datetime</a>, at releases <a href="https://github.com/robx/elm-datetime/releases/tag/1.0.0">1.0.0</a> and <a href="https://github.com/robx/elm-datetime/releases/tag/1.1.0">1.1.0</a>.</p>
 <figure>
 <iframe title="elm-datetime demo, v2" src="../../misc/elm-datetime-demo/v2.html" width="200" height="75">
 </iframe>
@@ -491,7 +485,6 @@ Success! Compiled 1 module.                                          </code></pr
 elm-datetime demo, v2
 </figcaption>
 </figure>
-<p>This time around, I used <a href="https://github.com/robx/shelm">shelm</a> to build the application via <code>make</code>. You can find the full code for the package and demo app at <a href="https://github.com/robx/elm-datetime">github.com/robx/elm-datetime</a>, at releases <a href="https://github.com/robx/elm-datetime/releases/tag/1.0.0">1.0.0</a> and <a href="https://github.com/robx/elm-datetime/releases/tag/1.1.0">1.1.0</a>.</p>
     <footer>
     If you have comments or questions, write me at
     <span class="email">&lt;spam at this domain&gt;</span>.
