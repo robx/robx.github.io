@@ -255,7 +255,7 @@ I ran into an unknown package while exploring dependencies:
 <li>generate an elm registry, by using <code>printf(1)</code> to generate binary data</li>
 <li>call <code>HOME=./elm-stuff/home HTTP_PROXY=. elm make</code> to build.</li>
 </ol>
-<p>I collected and wrapped up the various shell snippets involved in this as a bash script, <a href="https://github.com/robx/shelm">shelm</a>. Let’s have a look at some of the core parts:</p>
+<p>I collected and wrapped up the various shell snippets involved in this as a bash script, available at <a href="https://github.com/robx/shelm">robx/shelm</a>. Let’s have a look at some of the core parts:</p>
 <p>For regular Elm packages, step 1 may be achieved with <a href="https://stedolan.github.io/jq/"><code>jq</code></a>, <code>curl</code> and <code>tar</code>:</p>
 <pre><code>jq -r '.dependencies.direct+.dependencies.indirect
 	| to_entries[]
