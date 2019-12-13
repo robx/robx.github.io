@@ -3,7 +3,6 @@ nav a {
   text-decoration: none;
 }
 
-/* based on https://jrl.ninja/etc/post.css */
 body {
   font-family: Liberation Sans, sans-serif;
   background-color: #fffcf8;
@@ -72,7 +71,7 @@ aside + aside::before {
 }
 pre {
   overflow: scroll;
-  text-overflow: ellipsis;
+  text-overflow: hidden;
   border: 1px solid lightgray;
   padding: 5px;
 }

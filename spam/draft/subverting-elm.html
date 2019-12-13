@@ -149,7 +149,7 @@ the Elm/Kernel/ namespace.
 +    &quot;name&quot;: &quot;elm/my-elm-datetime&quot;,</code></pre>
 <p>Now <code>elm make</code> is happy:</p>
 <pre><code>$ elm make
-Success! Compiled 1 module.                                          </code></pre>
+Success! Compiled 1 module.</code></pre>
 <aside>
 Here, we should also call <code>elm make --docs=docs.json</code> to check that it’s happy with the state of documentation. Otherwise, compiling an app using this package will fail with an obscure error messages. Elm tooling ensures that published package dependencies don’t fail to compile, but we’ll have to bypass some of that later.
 </aside>
@@ -240,7 +240,7 @@ subscriptions model =
     }
 }</code></pre>
 <p>Naturally, this can’t work because <code>elm/my-elm-datetime</code> doesn’t exist to the <code>elm</code> tool:</p>
-<pre><code>$ elm make src/Demo.elm 
+<pre><code>$ elm make src/Demo.elm
 -- CORRUPT CACHE ---------------------------------------------------------------
 
 I ran into an unknown package while exploring dependencies:
@@ -317,8 +317,8 @@ $ hexdump -C elm-stuff/home/.elm/0.19.1/packages/registry.dat
 000000c4
 $ HOME=$(pwd)/elm-stuff/home HTTP_PROXY=. elm make --output=demo.js src/Demo.elm
 Dependencies loaded from local cache.
-Dependencies ready!                
-Success! Compiled 1 module.                                          </code></pre>
+Dependencies ready!
+Success! Compiled 1 module.</code></pre>
 <p>Here’s our app in action.</p>
 <figure>
 <iframe title="elm-datetime demo, v1" src="../../misc/elm-datetime-demo/v1.html" width="200" height="75">
@@ -340,11 +340,11 @@ elm-datetime demo, v1
 +++ b/src/Elm/Kernel/DateTime.js
 @@ -1,14 +1,21 @@
  /*
- 
+
 +import Elm.Kernel.Scheduler exposing (binding, succeed)
 +
  */
- 
+
  function _DateTime_localNumericDateTime() {
 -       return new Intl.DateTimeFormat(undefined, {
 -               year: 'numeric',
@@ -369,22 +369,22 @@ elm-datetime demo, v1
 <pre><code>--- a/src/DateTime.elm
 +++ b/src/DateTime.elm
 @@ -22,6 +22,7 @@ This module binds to
- 
+
  import Elm.Kernel.DateTime
  import Maybe exposing (Maybe)
 +import Task exposing (Task)
  import Time exposing (Posix)
- 
- 
+
+
 @@ -33,7 +34,7 @@ type DateTimeFormat
- 
+
  {-| Create a DateTimeFormat using user locale and timezone.
  -}
 -localNumericDateTime : DateTimeFormat
 +localNumericDateTime : Task x DateTimeFormat
  localNumericDateTime =
      Elm.Kernel.DateTime.localNumericDateTime ()
- </code></pre>
+</code></pre>
 <p>And let’s bump the package version:</p>
 <pre><code>--- a/elm.json
 +++ b/elm.json
@@ -418,21 +418,21 @@ index fd85793..776b913 100644
  import Html
 +import Task
  import Time
- 
- 
+
+
 @@ -18,17 +19,19 @@ main =
- 
+
  type alias Model =
      { time : Maybe Time.Posix
 +    , format : Maybe DateTime.DateTimeFormat
      }
- 
- 
+
+
  type Msg
      = Tick Time.Posix
 +    | NewFormat DateTime.DateTimeFormat
- 
- 
+
+
  init : () -&gt; ( Model, Cmd Msg )
  init flags =
 -    ( { time = Nothing }
@@ -440,16 +440,16 @@ index fd85793..776b913 100644
 +    ( { time = Nothing, format = Nothing }
 +    , Task.perform NewFormat DateTime.localNumericDateTime
      )
- 
- 
+
+
 @@ -38,17 +41,20 @@ update msg model =
          Tick posix -&gt;
              ( { model | time = Just posix }, Cmd.none )
- 
+
 +        NewFormat fmt -&gt;
 +            ( { model | format = Just fmt }, Cmd.none )
 +
- 
+
  view : Model -&gt; Browser.Document Msg
  view model =
 -    let
@@ -469,7 +469,7 @@ index fd85793..776b913 100644
                  [ Html.div [] [ Html.text &lt;| String.fromInt &lt;| Time.posixToMillis &lt;| posix ]
                  , Html.div [] [ Html.text &lt;| format posix ]
                  ]</code></pre>
-<p>Done: Still works! (With no difference, except that it should fail to take into account possible locale and timezone changes.)</p>
+<p>Done:</p>
 <pre><code>$ make
 shelm fetch
 pruning stale dependency elm/my-elm-datetime-1.0.0
@@ -477,9 +477,9 @@ fetching https://github.com/robx/elm-datetime/archive/1.1.0.tar.gz
 generating /s/elm-datetime/demo/elm-stuff/home/.elm/0.19.1/packages/registry.dat
 shelm make --output=demo.js src/Demo.elm
 Dependencies loaded from local cache.
-Dependencies ready!                
-Success! Compiled 1 module.                                          </code></pre>
-<p>This time around, I used <a href="https://github.com/robx/shelm">shelm</a> to build the application via <code>make</code>. You can find the full code for the package and demo app at <a href="https://github.com/robx/elm-datetime">github.com/robx/elm-datetime</a>, at releases <a href="https://github.com/robx/elm-datetime/releases/tag/1.0.0">1.0.0</a> and <a href="https://github.com/robx/elm-datetime/releases/tag/1.1.0">1.1.0</a>.</p>
+Dependencies ready!
+Success! Compiled 1 module.</code></pre>
+<p>Still works! This time around, I used <a href="https://github.com/robx/shelm">shelm</a> to build the application via <code>make</code>.</p>
 <figure>
 <iframe title="elm-datetime demo, v2" src="../../misc/elm-datetime-demo/v2.html" width="200" height="75">
 </iframe>
@@ -487,6 +487,7 @@ Success! Compiled 1 module.                                          </code></pr
 elm-datetime demo, v2
 </figcaption>
 </figure>
+<p>You can find the full code for the package and demo app at <a href="https://github.com/robx/elm-datetime">github.com/robx/elm-datetime</a>, at releases <a href="https://github.com/robx/elm-datetime/releases/tag/1.0.0">1.0.0</a> and <a href="https://github.com/robx/elm-datetime/releases/tag/1.1.0">1.1.0</a>.</p>
     <footer>
     If you have comments or questions, write me at
     <span class="email">&lt;spam at this domain&gt;</span>.
