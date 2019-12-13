@@ -79,7 +79,7 @@ What we’re doing here is most likely not the Elm team’s preferred approach. 
 There’s an 0.18 package <a href="https://github.com/vanwagonet/elm-intl">vanwagonet/elm-intl</a> wrapping <code>Intl</code>, but attempts to get that functionality into 0.19 were <a href="https://discourse.elm-lang.org/t/bindings-for-intl/1264">stalled</a>.
 </aside>
 <h1 id="calling-native-code">Calling native code</h1>
-<p>The documented approach to interacting with Javascript code from Elm is using <a href="https://guide.elm-lang.org/interop/ports.html">ports</a>, which would effectively turn a simple function call into an asynchronous RPC invocation with a ton of scaffolding. That didn’t appear to be an acceptable solution, so I thought I’d apply my <a href="guix-elm-2.html">recent insight</a> into the <code>elm</code> tooling to figure out how to use the Javascript API from within Elm. It seemed like a fun challenge, too!</p>
+<p>The documented approach to interacting with Javascript code from Elm is using <a href="https://guide.elm-lang.org/interop/ports.html">ports</a>, which would effectively turn a simple function call into an asynchronous RPC invocation with a ton of scaffolding. That didn’t appear to be an acceptable solution, so I thought I’d apply my <a href="guix-elm-2.html">recent insight</a> into the Elm tooling to figure out how to use the Javascript API from within Elm. It seemed like a fun challenge, too!</p>
 <h2 id="a-native-module">A native module</h2>
 <p>By following along what <code>vanwagonet/elm-intl</code> and <code>elm/time</code> do for their Javascript interop, I came up with a native module <code>Elm.Kernel.DateTime</code> implemented in the file <code>src/Elm/Kernel/DateTime.js</code></p>
 <pre><code>/*
