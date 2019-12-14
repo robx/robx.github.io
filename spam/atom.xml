@@ -323,7 +323,7 @@ $ HOME=$(pwd)/elm-stuff/home HTTP_PROXY=. elm make --output=demo.js src/Demo.elm
 Dependencies loaded from local cache.
 Dependencies ready!
 Success! Compiled 1 module.</code></pre>
-<p>Here’s our app in action.</p>
+<p>Here’s our app in action:</p>
 <figure>
 <iframe title="elm-datetime demo, v1" src="/misc/elm-datetime-demo/v1.html" width="200" height="75">
 </iframe>
